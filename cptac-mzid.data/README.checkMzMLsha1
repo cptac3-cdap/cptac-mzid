@@ -1,0 +1,18 @@
+
+checkMzMLsha1
+=============
+
+Usage: checkMzMLsha1 *.mzML
+       checkMzMLsha1 *.mzML.gz
+
+Checks the embedded SHA1 checksums in an mzML file against the source
+files (declared in the XML) and the mzML file itself. Source or mzML
+files with problematic checksums are output. If all checksums match,
+then nothing is output.
+
+Examples:
+
+* Check SHA1 checksums converted mzML files after msconvertall:
+
+  > checkMzMLsha1 *.mzML.gz
+

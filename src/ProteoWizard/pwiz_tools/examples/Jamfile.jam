@@ -1,0 +1,9 @@
+
+exe textpsm2mzid
+    : textpsm2mzid.cpp
+      TextPSMReader.cpp
+      ../../pwiz/data/identdata
+    : <include>../../..
+    ;
+
+

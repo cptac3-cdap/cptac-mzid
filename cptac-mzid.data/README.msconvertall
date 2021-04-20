@@ -1,0 +1,19 @@
+
+msconvertall
+============
+
+Usage: msconvertall [ -r <raw-extension> ] [ -v ]
+
+Runs msconvert on all matching raw spectral files (with file-extension
+<raw-extension>) in the current directory and below. Default is "RAW"
+for Thermo files. msconvertall.ini contains the standard command-line
+for CPTAC conversion - this can be modified for site-specific or vendor
+format specific conversion options.
+
+Examples:
+
+* Convert all RAW files in upload directory LTQ-Orbitrap@86:
+
+  > cd LTQ-Orbitrap@86
+  > msconvertall 
+

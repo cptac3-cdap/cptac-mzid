@@ -1,0 +1,21 @@
+
+packageraw
+==========
+
+Usage: packageraw [ -r <raw-extension> ] [ -R | --remove ] [ -v ]
+
+Package multi-file raw spectra (.wiff + .wiff.scan, for example) into
+a single .zip file for convenience of upload and download. Zips up all
+matching raw spectral files (with file-extension <raw-extension>) in the
+current directory and below with any file with the same prefix. Default
+is "wiff" for Applied Biosystems files. Optionally, remove the original
+raw spectra datafiles (-R or --remove option). Assumes the binary "zip"
+is available on the system path.
+
+Examples:
+
+* Zip all .wiff and .wiff.scan files in upload directory Site 56:
+
+  > cd "Site 56"
+  > packageraw 
+

@@ -1,0 +1,11 @@
+K 10
+svn:ignore
+V 41
+*.pyc
+*.tbl
+*.sqn
+*.hdr
+*.idb
+*.egg-info
+
+END
