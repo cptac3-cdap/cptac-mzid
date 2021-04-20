@@ -29,7 +29,7 @@ class FileDataset(Dataset):
             os.close(filedesc)
             self.tempfile = True
             assert names and tables
-	    self.names_ = names
+            self.names_ = names
             self.from_tables(tables)
         else:
             self.filename = filename
@@ -37,9 +37,9 @@ class FileDataset(Dataset):
             if not names and not tables:
                 self.set_names()
             else:
-	        self.names_ = names
-		self.from_tables(tables)
-        
+                self.names_ = names
+                self.from_tables(tables)
+
 import xlrd
 import xlwt
 
@@ -53,7 +53,7 @@ class XLSFileDataset(FileDataset):
         if kw.has_key('rowheight'):
             self.rowheight.update(kw['rowheight'])
             del kw['rowheight']
-        super(XLSFileDataset,self).__init__(*args,**kw)    
+        super(XLSFileDataset,self).__init__(*args,**kw)
     underline = xlwt.easyxf('font: underline single')
     heightstyles={}
     @staticmethod
@@ -99,25 +99,25 @@ class XLSFileDataset(FileDataset):
             pass
         ws.write(i,j,str(value))
     def set_names(self):
-	book = xlrd.open_workbook(self.filename)
+        book = xlrd.open_workbook(self.filename)
         for sheet_idx,sheet_name in enumerate(book.sheet_names()):
-	    self.names_.append(sheet_name)
+            self.names_.append(sheet_name)
 
     def from_tables(self,tables):
         wb = xlwt.Workbook()
-	for n,t in zip(self.names_,tables):
-	    ws = wb.add_sheet(n)
+        for n,t in zip(self.names_,tables):
+            ws = wb.add_sheet(n)
             dcw = self.colwidth[n].get(None)
             for j,h in enumerate(t.headers()):
                 cw = self.colwidth[n].get(h,dcw)
                 if cw != None:
                     XLSFileDataset.setcolwidth(ws,j,cw)
             for j,h in enumerate(t.headers()):
-		XLSFileDataset.writevalue(ws,0,j,h)
+                XLSFileDataset.writevalue(ws,0,j,h)
             drh = self.rowheight[n].get(None)
             for i,r in enumerate(t.rows()):
-	        if i >= 65535:
-		    break
+                if i >= 65535:
+                    break
                 rh = self.rowheight[n].get(i,drh)
                 if rh:
                     XLSFileDataset.setrowheight(ws,i+1,rh)
@@ -137,7 +137,7 @@ class XLSXFileDataset(FileDataset):
         if kw.has_key('rowheight'):
             self.rowheight.update(kw['rowheight'])
             del kw['rowheight']
-        super(XLSXFileDataset,self).__init__(*args,**kw)    
+        super(XLSXFileDataset,self).__init__(*args,**kw)
     @staticmethod
     def setcolwidth(ws,j,pixels):
         winpts = pixels*0.14214 # openpyxl.shared.units.pixels_to_points(pixels)
@@ -180,8 +180,8 @@ class XLSXFileDataset(FileDataset):
             return
         except (ValueError,TypeError):
             pass
-        ws.cell(row=i,column=j).value=str(value)        
-    
+        ws.cell(row=i,column=j).value=str(value)
+
     # underline = xlwt.easyxf('font: underline single')
     def set_names(self):
         book = openpyxl.reader.excel.load_workbook(filename = self.filename)
@@ -196,16 +196,16 @@ class XLSXFileDataset(FileDataset):
             else:
                 ws = wb.create_sheet()
             ws.title = n
-	    ws.auto_filter = 'A1:%s1'%(openpyxl.cell.get_column_letter(len(t.headers())),)
+            ws.auto_filter = 'A1:%s1'%(openpyxl.cell.get_column_letter(len(t.headers())),)
             dcw = self.colwidth[n].get(None)
             for j,h in enumerate(t.headers()):
                 cw = self.colwidth[n].get(h,dcw)
                 if cw != None:
                     XLSXFileDataset.setcolwidth(ws,j,cw)
-	    for j,h in enumerate(t.headers()):
-		ws.cell(row=0,column=j).value=h
-		ws.cell(row=0,column=j).style.font.bold = True
-		ws.cell(row=0,column=j).style.borders.bottom.border_style = openpyxl.style.Border.BORDER_THIN
+            for j,h in enumerate(t.headers()):
+                ws.cell(row=0,column=j).value=h
+                ws.cell(row=0,column=j).style.font.bold = True
+                ws.cell(row=0,column=j).style.borders.bottom.border_style = openpyxl.style.Border.BORDER_THIN
             drh = self.rowheight[n].get(None)
             for i,r in enumerate(t.rows()):
                 rh = self.rowheight[n].get(i,drh)
@@ -219,7 +219,7 @@ class ZIPFileDataset(FileDataset):
 
     def from_tables(self,tables):
         tmpdir = tempfile.mkdtemp()
-	for n,t in zip(self.names_,tables):
+        for n,t in zip(self.names_,tables):
             to = CSVFileTable(filename=os.path.join(tmpdir,n+'.csv'),
                               from_rows=t,compression=None)
         zf = zipfile.ZipFile(self.filename,'w',compression=zipfile.ZIP_DEFLATED,allowZip64=True)
@@ -227,7 +227,7 @@ class ZIPFileDataset(FileDataset):
             zf.write(os.path.join(tmpdir,n+'.csv'),n+'.csv')
         zf.close()
         shutil.rmtree(tmpdir,ignore_errors=True)
-        
+
 class Table(object):
 
     def extract(self,*keys):
@@ -254,7 +254,7 @@ class MemoryTable(Table):
             yield dict(zip(self.headers_,r))
 
     def size(self):
-	return len(self.therows)
+        return len(self.therows)
 
     def from_rows(self,rows):
         self.therows = []
@@ -270,7 +270,7 @@ class MemoryTable(Table):
 class FileTable(Table):
 
     def __init__(self,filename=None,headers=None,from_rows=None,compression=None):
-	self.compression = compression
+        self.compression = compression
         if not filename:
             cmp = ''
             if compression:
@@ -295,15 +295,15 @@ class FileTable(Table):
                     self.from_rows(from_rows)
                 else:
                     self.headers_ = headers
-        
+
     def __del__(self):
         if hasattr(self,'tempfile') and self.tempfile:
             if os.path.exists(self.filename):
                 os.unlink(self.filename)
 
     def open(self,mode='r'):
-	if not isinstance(self.filename,basestring):
-	    return iter(self.filename)
+        if not isinstance(self.filename,basestring):
+            return iter(self.filename)
         if self.filename.lower().endswith(".gz") or \
                self.compression == "gz" or \
                os.path.exists(self.filename+".gz"):
@@ -327,7 +327,7 @@ class FileTable(Table):
                 return h
             except IOError:
                 return open(self.filename,mode)
-	elif self.filename.lower().endswith(".bz2") or \
+        elif self.filename.lower().endswith(".bz2") or \
                  self.compression == "bz2" or \
                  os.path.exists(self.filename+".bz2"):
             try:
@@ -337,7 +337,7 @@ class FileTable(Table):
                         h.readline()
                         h.seek(0)
                     else:
-                        h = bz2.BZ2File(self.filename+".bz2",mode)                        
+                        h = bz2.BZ2File(self.filename+".bz2",mode)
                         h.readline()
                         h.seek(0)
                         self.filename += ".bz2"
@@ -351,8 +351,8 @@ class FileTable(Table):
             except IOError, e:
                 # print >>sys.stderr, e
                 return open(self.filename,mode+('U' if mode.startswith('r') else ""))
-	else:
-	    return open(self.filename,mode+('U' if mode.startswith('r') else ""))
+        else:
+            return open(self.filename,mode+('U' if mode.startswith('r') else ""))
 
 import csv
 
@@ -363,7 +363,7 @@ class CSVFileTable(FileTable):
         t = csv.reader(h)
         self.headers_ = t.next()
         h.close()
-    
+
     def rows(self):
         h = self.open()
         rows = csv.DictReader(h)
@@ -386,7 +386,7 @@ class TSVFileTable(FileTable):
         t = csv.reader(h,dialect='excel-tab')
         self.headers_ = t.next()
         h.close()
-    
+
     def rows(self):
         h = self.open()
         rows = csv.DictReader(h,dialect='excel-tab')
@@ -405,22 +405,22 @@ class TSVFileTable(FileTable):
 class TXTFileTable(FileTable):
     def __init__(self,*args,**kw):
         assert('headers' in kw)
-	self.delimeter = None
-	if 'delim' in kw:
-	   self.delimeter = kw['delim']
-	   del kw['delim']
-	self.comment = '#'
-	if 'comment' in kw:
-	   self.comment = kw['comment']
-	   del kw['comment']
-	FileTable.__init__(self,*args,**kw)
+        self.delimeter = None
+        if 'delim' in kw:
+            self.delimeter = kw['delim']
+            del kw['delim']
+        self.comment = '#'
+        if 'comment' in kw:
+            self.comment = kw['comment']
+            del kw['comment']
+        FileTable.__init__(self,*args,**kw)
     def rows(self):
         h = self.open()
-	for l in h:
-	    if l[0] == self.comment:
-		continue
-	    r = dict(zip(self.headers_,l.split(self.delimeter)))
-	    yield r
+        for l in h:
+            if l[0] == self.comment:
+                continue
+            r = dict(zip(self.headers_,l.split(self.delimeter)))
+            yield r
         h.close()
     def from_rows(self,rows):
         wh = self.open(mode='wb')
@@ -453,7 +453,7 @@ class XLSFileTable(FileTable):
             self.rowheight = kw['rowheight']
             del kw['rowheight']
         super(XLSFileTable,self).__init__(*args,**kw)
-        
+
     def set_headers(self):
         self.headers_ = []
         book = xlrd.open_workbook(self.filename)
@@ -465,7 +465,7 @@ class XLSFileTable(FileTable):
             sheet = book.sheet_by_name(sheet_name)
             for v in sheet.row_values(0):
                 self.headers_.append(str(v))
-	assert len(self.headers_) > 0
+        assert len(self.headers_) > 0
 
     def rows(self):
         book = xlrd.open_workbook(self.filename)
@@ -479,7 +479,7 @@ class XLSFileTable(FileTable):
                 if r == 0:
                     continue
                 yield dict(zip(self.headers_,map(str,sheet.row_values(r))))
-        
+
     def from_rows(self,rows):
         wb = xlwt.Workbook()
         assert(self.sheet != None)
@@ -513,7 +513,7 @@ class XLSXFileTable(FileTable):
         else:
             self.sheet = None
         super(XLSXFileTable,self).__init__(*args,**kw)
-        
+
     def set_headers(self):
         self.headers_ = []
         book = openpyxl.reader.excel.load_workbook(filename = self.filename)
@@ -529,7 +529,7 @@ class XLSXFileTable(FileTable):
                 if not h:
                     break
                 self.headers_.append(str(h))
-	assert len(self.headers_) > 0
+        assert len(self.headers_) > 0
 
     def rows(self):
         book = openpyxl.reader.excel.load_workbook(filename = self.filename)
@@ -549,18 +549,18 @@ class XLSXFileTable(FileTable):
                     value = sheet.cell(row=r,column=c).value
                     row.append(value)
                 yield dict(zip(self.headers_,row))
-        
+
     def from_rows(self,rows):
         wb = openpyxl.workbook.Workbook()
         assert(self.sheet != None)
         ws = wb.worksheets[0]
         ws.title = self.sheet
-	ws.auto_filter = 'A1:%s1'%(openpyxl.cell.get_column_letter(len(self.headers_)),)
+        ws.auto_filter = 'A1:%s1'%(openpyxl.cell.get_column_letter(len(self.headers_)),)
         for j,h in enumerate(self.headers_):
             ws.cell(row=0,column=j).value=h
         for i,r in enumerate(rows):
             for j,h in enumerate(self.headers_):
-                XLSXFileDataset.writevalue(ws,i+1,j,r.get(h))		
+                XLSXFileDataset.writevalue(ws,i+1,j,r.get(h))
         wb.save(filename=self.filename)
 
 class AddField(Table):
@@ -681,7 +681,7 @@ class HeaderMap(Table):
     def rows(self):
         for r in self.tin:
             yield dict( [ (self.headermap(k),v) for (k,v) in r.items() ] )
-            
+
 class ColumnSelect(Table):
     def __init__(self,tablein,goodset):
         self.tin = tablein
@@ -691,7 +691,7 @@ class ColumnSelect(Table):
     def rows(self):
         for r in self.tin:
             yield dict( [ (k,v) for (k,v) in r.items() if k in self.goodset ] )
-            
+
 class ColumnRemove(Table):
     def __init__(self,tablein,badset):
         self.tin = tablein
@@ -701,7 +701,7 @@ class ColumnRemove(Table):
     def rows(self):
         for r in self.tin:
             yield dict( [ (k,v) for (k,v) in r.items() if k not in self.badset ] )
-            
+
 class ColumnRemoveRegex(Table):
     def __init__(self,tablein,badregex):
         self.tin = tablein
@@ -716,12 +716,12 @@ class ValueMap(Table):
         self.tin = tablein
         self.headers_ = list(tablein.headers())
         self.f = mapfn
-	self.colset = colset
+        self.colset = colset
 
     def applymap(self,item):
-	if self.colset == None or item[0] in self.colset:
-	    return item[0],self.f(item[1])
-	return item
+        if self.colset == None or item[0] in self.colset:
+            return item[0],self.f(item[1])
+        return item
 
     def rows(self):
         for r in self.tin:
@@ -729,22 +729,22 @@ class ValueMap(Table):
 
 class MoveField(Table):
     def __init__(self,tablein,pos,cols,after=True):
-	self.tin = tablein
-	self.headers_ = list(tablein.headers())
-	for c in cols:
-	    assert c in self.headers_
-	try:
-	    p = int(pos)
- 	except (TypeError, ValueError):
-	    assert pos in self.headers_
-	    p = self.headers_.index(pos)
-	for c in reversed(cols):
-	    p0 = self.headers_.index(c)
-	    del self.headers_[p0]
-	    if after:
-	        self.headers_.insert(p+1,c)
-	    else:
-	        self.headers_.insert(p,c)
+        self.tin = tablein
+        self.headers_ = list(tablein.headers())
+        for c in cols:
+            assert c in self.headers_
+        try:
+            p = int(pos)
+        except (TypeError, ValueError):
+            assert pos in self.headers_
+            p = self.headers_.index(pos)
+        for c in reversed(cols):
+            p0 = self.headers_.index(c)
+            del self.headers_[p0]
+            if after:
+                self.headers_.insert(p+1,c)
+            else:
+                self.headers_.insert(p,c)
 
     def rows(self):
         for r in self.tin:
@@ -752,16 +752,15 @@ class MoveField(Table):
 
 class ParsimonyCSV:
     def __init__(self,proteins):
-	self._proteins = set(proteins)
+        self._proteins = set(proteins)
     def rows(self,inrows):
-	for r in inrows:
-	    proteins = set(r['protein'].split(';'))
-	    proteins &= self._proteins
-	    if len(proteins) > 0:
-		r['protein'] = ';'.join(proteins)
-		yield r
+        for r in inrows:
+            proteins = set(r['protein'].split(';'))
+            proteins &= self._proteins
+            if len(proteins) > 0:
+                r['protein'] = ';'.join(proteins)
+                yield r
     def rewrite(self,infile,outfile):
-	rows = CSVFileTable(filename=infile)
-	newrows = CSVFileTable(filename=outfile,headers=rows.headers(),compression=None)
-	newrows.from_rows(self.rows(rows))
-
+        rows = CSVFileTable(filename=infile)
+        newrows = CSVFileTable(filename=outfile,headers=rows.headers(),compression=None)
+        newrows.from_rows(self.rows(rows))

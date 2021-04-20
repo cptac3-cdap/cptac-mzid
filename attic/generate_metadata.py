@@ -29,13 +29,13 @@ for fs in opts.fractions.split(','):
     fs = fs.strip()
     m = re.search('^(\d+)-(\d+)$',fs)
     if m:
-	f = map(lambda n: (n,opts.numberfmt%n),range(int(m.group(1)),int(m.group(2))+1))
+        f = map(lambda n: (n,opts.numberfmt%n),range(int(m.group(1)),int(m.group(2))+1))
     else:
         try:
-	    f = [ (fs,fs) ]
-	    f = [ (int(fs),opts.numberfmt%int(fs)) ]
+            f = [ (fs,fs) ]
+            f = [ (int(fs),opts.numberfmt%int(fs)) ]
         except ValueError:
-	    pass
+            pass
     fractions.extend(f)
 
 replicates = []
@@ -43,13 +43,13 @@ for fs in opts.replicates.split(','):
     fs = fs.strip()
     m = re.search('^(\d+)-(\d+)$',fs)
     if m:
-	f = map(lambda n: (n,opts.numberfmt%n),range(int(m.group(1)),int(m.group(2))+1))
+        f = map(lambda n: (n,opts.numberfmt%n),range(int(m.group(1)),int(m.group(2))+1))
     else:
         try:
-	    f = [ (fs,fs) ]
-	    f = [ (int(fs),opts.numberfmt%int(fs)) ]
+            f = [ (fs,fs) ]
+            f = [ (int(fs),opts.numberfmt%int(fs)) ]
         except ValueError:
-	    pass
+            pass
     replicates.extend(f)
 
 folders = []
@@ -57,7 +57,7 @@ from dataset import XLSXFileTable
 rows = XLSXFileTable(args[0],sheet=opts.sheet)
 for r in rows:
     if not r.get("File Name"):
-	continue
+        continue
     if r.get("PCC","") != opts.pcc:
         continue
     # print r
@@ -99,26 +99,26 @@ Filename
 """.splitlines()))
 output = []
 for fo in folders:
-  for rep in replicates:
-    for fr in fractions:
-	d = dict(PCC=opts.pcc,Lab=opts.pi)
-        d["Analytical Sample Protocol"] = opts.asprot
-        d["Chromatography Protocol"] = opts.lcprot
-        d["Mass Spectrometry Protocol"] = opts.msprot
-	d["Fraction"] = fr[0]
-	d["Replicate"] = rep[0]
-	d["Date"] = fo["Date"]
-	d["114-Biospecimen"] = fo["114-Biospecimen"]
-	d["115-Biospecimen"] = fo["115-Biospecimen"]
-	d["116-Biospecimen"] = fo["116-Biospecimen"]
-	d["117-Biospecimen"] = fo["117-Biospecimen"]
-	d["Folder"] = fo["Folder"]
-	# print fo["FilenameTemplate"],fr
-	d["Filename"] = fo["FilenameTemplate"]%dict(replicate=rep[1],fraction=fr[1])
-	# JHU special
-	d["Filename"] = re.sub(r'[fF]POOL\.raw','POOL.raw',d["Filename"])
-	output.append(d)
-	# print d
+    for rep in replicates:
+        for fr in fractions:
+            d = dict(PCC=opts.pcc,Lab=opts.pi)
+            d["Analytical Sample Protocol"] = opts.asprot
+            d["Chromatography Protocol"] = opts.lcprot
+            d["Mass Spectrometry Protocol"] = opts.msprot
+            d["Fraction"] = fr[0]
+            d["Replicate"] = rep[0]
+            d["Date"] = fo["Date"]
+            d["114-Biospecimen"] = fo["114-Biospecimen"]
+            d["115-Biospecimen"] = fo["115-Biospecimen"]
+            d["116-Biospecimen"] = fo["116-Biospecimen"]
+            d["117-Biospecimen"] = fo["117-Biospecimen"]
+            d["Folder"] = fo["Folder"]
+            # print fo["FilenameTemplate"],fr
+            d["Filename"] = fo["FilenameTemplate"]%dict(replicate=rep[1],fraction=fr[1])
+            # JHU special
+            d["Filename"] = re.sub(r'[fF]POOL\.raw','POOL.raw',d["Filename"])
+            output.append(d)
+            # print d
 
 out = XLSXFileTable(opts.output,sheet="Metadata",headers=headers)
 out.from_rows(output)

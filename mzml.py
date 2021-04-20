@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import sys, os, os.path, gzip
 from find_elementtree import ET
@@ -21,7 +21,7 @@ scanparams = [
     # convert to seconds...
     ('scan start time', 'MS:1000016', lambda s: 60.0*float(s)),
     ]
-    
+
 def getcvparams(ele,paramlist):
     values = {}
     for chele in ele.findall(CVP):
@@ -30,7 +30,7 @@ def getcvparams(ele,paramlist):
                chele.attrib['accession'] == p[1]:
                 values[chele.attrib['name']] = p[2](chele.attrib.get('value'))
     return values
-    
+
 ns = '{http://psi.hupo.org/ms/mzml}'
 SPEC = ns+'spectrum'
 CVP  = ns+'cvParam'
@@ -67,4 +67,4 @@ if __name__ == '__main__':
     import sys, os
 
     for t in iterprecursor(sys.argv[1]):
-        print '\t'.join(map(str,t))
+        print('\t'.join(map(str,t)))

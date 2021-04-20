@@ -1,4 +1,4 @@
 
-from Record import *
-from Run import *
-from Options import *
+from .Record import *
+from .Run import *
+from .Options import *

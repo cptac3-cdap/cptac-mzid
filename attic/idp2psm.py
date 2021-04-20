@@ -15,20 +15,20 @@ parser.add_option("--idpdb",type="string",default=None,
 parser.add_option("--source",type="string",default="UniProt,RefSeq",
                     dest="source",help="Comma separated sources from UniProt, RefSeq. Default: UniProt,RefSeq.")
 parser.add_option("--prgrp",action="store_true",default=False,
-		  dest="prgrp",help="Compute protein groups")
+                  dest="prgrp",help="Compute protein groups")
 opts,args = parser.parse_args()
 if opts.taxa:
     opts.taxa = filter(None,map(str.strip,opts.taxa.split(',')))
 else:
-   opts.taxa = []
+    opts.taxa = []
 if opts.source:
     opts.source = filter(None,map(str.strip,opts.source.split(',')))
 else:
-   opts.source = []
+    opts.source = []
 
 import sqlite3
 
-query = """ 
+query = """
 SELECT psm.id,
        psm.qvalue as qvalue,
        psm.rank as rank,
@@ -40,15 +40,15 @@ SELECT psm.id,
        spec.precursormz as precursorMz,
        spec.nativeID as nativeID,
        source.name as basename,
-       group_concat( DISTINCT ( substr( protdata.Sequence, pep2prot.[OFFSET], 1 ) || ':' || prot.accession || ':' || substr( protdata.Sequence, pep2prot.[OFFSET] + pep2prot.length + 1, 1 ) ) ) as proteins, 
-       group_concat( DISTINCT ( prot.accession ) ) as proteins1, 
+       group_concat( DISTINCT ( substr( protdata.Sequence, pep2prot.[OFFSET], 1 ) || ':' || prot.accession || ':' || substr( protdata.Sequence, pep2prot.[OFFSET] + pep2prot.length + 1, 1 ) ) ) as proteins,
+       group_concat( DISTINCT ( prot.accession ) ) as proteins1,
        group_concat( DISTINCT ( pepmod.site || ( pepmod.[OFFSET] + 1 ) || ':' || mod.MonoMassDelta )  ) as mods,
        group_concat( DISTINCT ( scorename.Name || ':' || score.Value ) ) as scores
-  FROM UnfilteredPeptideSpectrumMatch AS psm, 
-       UnfilteredPeptide AS pep, 
-       UnfilteredPeptideInstance AS pep2prot, 
-       UnfilteredProtein AS prot, 
-       UnfilteredSpectrum AS spec, 
+  FROM UnfilteredPeptideSpectrumMatch AS psm,
+       UnfilteredPeptide AS pep,
+       UnfilteredPeptideInstance AS pep2prot,
+       UnfilteredProtein AS prot,
+       UnfilteredSpectrum AS spec,
        SpectrumSource AS source
        LEFT JOIN ProteinData AS protdata
               ON protdata.id = prot.id
@@ -57,18 +57,18 @@ SELECT psm.id,
        LEFT JOIN Modification AS mod
               ON pepmod.modification = mod.id
        LEFT JOIN PeptideSpectrumMatchScore AS score
-              ON psm.id = score.psmid 
+              ON psm.id = score.psmid
        LEFT JOIN PeptideSpectrumMatchScoreName AS scorename
               ON score.scorenameid = scorename.id
- WHERE pep.id = psm.peptide 
+ WHERE pep.id = psm.peptide
        AND
-       pep.id = pep2prot.peptide 
+       pep.id = pep2prot.peptide
        AND
-       prot.id = pep2prot.protein 
+       prot.id = pep2prot.protein
        AND
-       psm.spectrum = spec.id 
+       psm.spectrum = spec.id
        AND
-       spec.source = source.id 
+       spec.source = source.id
        AND
        source.name = ?
        AND
@@ -111,33 +111,33 @@ IDPicker:QValues
 """.split()
 specparams=['intensity of precursor ion','retention time']
 # specparams=[]
-headers = [ 'SpectrumFile', 'Location', 'SpectrumID', 'SpectrumIDFormat', 'FileFormat', 'Scan', 
-	    'ExperimentalMassToCharge', 'Rank', 'Peptide', 
-	    'retention time', 'intensity of precursor ion',
-	    'ChargeState', 'Modification', 'Protein' ] + scores + params + specparams
+headers = [ 'SpectrumFile', 'Location', 'SpectrumID', 'SpectrumIDFormat', 'FileFormat', 'Scan',
+            'ExperimentalMassToCharge', 'Rank', 'Peptide',
+            'retention time', 'intensity of precursor ion',
+            'ChargeState', 'Modification', 'Protein' ] + scores + params + specparams
 expected_keys = set(scores + params + ignore)
 
 ptms = """
-[	+144.102	UNIMOD:214	144.102063	name
-K	+144.102	UNIMOD:214	144.102063	name
-M	+15.995		Oxidation       15.994915	name
-C	+57.021		Carbamidomethyl 57.021464	name
-Q	+0.984		Deamidated	0.984016	name
-N	+0.984		Deamidated	0.984016	name
-[Q	-17.027		Gln->pyro-Glu	-17.026549 	name
-[Q	-17.026		Gln->pyro-Glu	-17.026549 	name
-[E	-18.011		Glu->pyro-Glu 	-18.010565	name
-S	+79.966		Phospho		79.966331 	name
-T	+79.966		Phospho		79.966331 	name
-Y	+79.966		Phospho		79.966331 	name
+[       +144.102        UNIMOD:214      144.102063      name
+K       +144.102        UNIMOD:214      144.102063      name
+M       +15.995         Oxidation       15.994915       name
+C       +57.021         Carbamidomethyl 57.021464       name
+Q       +0.984          Deamidated      0.984016        name
+N       +0.984          Deamidated      0.984016        name
+[Q      -17.027         Gln->pyro-Glu   -17.026549      name
+[Q      -17.026         Gln->pyro-Glu   -17.026549      name
+[E      -18.011         Glu->pyro-Glu   -18.010565      name
+S       +79.966         Phospho         79.966331       name
+T       +79.966         Phospho         79.966331       name
+Y       +79.966         Phospho         79.966331       name
 [       +42.011         Acetyl          42.010565       name
 """
-# [Q	+144.102-17.027 UNIMOD:214,Gln->pyro-Glu 144.102063,-17.026549 name,name  
-# [E	+144.102-18.011 UNIMOD:214,Glu->pyro-Glu 144.102063,-18.010565 name,name  
+# [Q    +144.102-17.027 UNIMOD:214,Gln->pyro-Glu 144.102063,-17.026549 name,name
+# [E    +144.102-18.011 UNIMOD:214,Glu->pyro-Glu 144.102063,-18.010565 name,name
 cvmods = {}
 for l in ptms.splitlines():
     if l.strip() == "":
-	continue
+        continue
     aa,delstr,name,delta,spec = l.split()
     delta = float(delta)
     cvmods[(aa,delstr)] = (name,delta,spec)
@@ -145,13 +145,13 @@ for l in ptms.splitlines():
 root = os.path.split(sys.argv[0])[0]
 seqdb = defaultdict(list)
 for t in opts.taxa:
-  for s in opts.source:
-    matches = glob.glob('%s/sequence/%s:%s:*.fasta'%(root,s,t))
-    if len(matches) == 1:
-        seqdb[s].extend(matches)
-    if len(matches) > 1:
-        raise RuntimeError("Sequence database problem, too many matching databases for %s"%('%s/sequence/%s:%s:*.fasta'%(root,s,t),))
-	
+    for s in opts.source:
+        matches = glob.glob('%s/sequence/%s:%s:*.fasta'%(root,s,t))
+        if len(matches) == 1:
+            seqdb[s].extend(matches)
+        if len(matches) > 1:
+            raise RuntimeError("Sequence database problem, too many matching databases for %s"%('%s/sequence/%s:%s:*.fasta'%(root,s,t),))
+
 md = dict()
 md['SpectrumIDFormat'] = 'Thermo nativeID format'
 # md['FileFormat'] = 'Thermo RAW file'
@@ -175,65 +175,65 @@ def mergepsms(rows):
     lastspec = None
     specrows = {}
     for row in rows:
-	spec = row['nativeID']
-	if spec != lastspec:
-	    if lastspec != None:
-		# print specrows
-		bestminqvalue = None
-	        for r in sorted(specrows.values(),key=lambda r: r['minqvalue']):
-		    if bestminqvalue == None or r['minqvalue'] == bestminqvalue:
-			if bestminqvalue == None:
-			    bestminqvalue = r['minqvalue']
-		        yield r
-	    specrows = {}
-	    lastspec = spec
-	pep = row['pepseq']
-	mods = []
+        spec = row['nativeID']
+        if spec != lastspec:
+            if lastspec != None:
+                # print specrows
+                bestminqvalue = None
+                for r in sorted(specrows.values(),key=lambda r: r['minqvalue']):
+                    if bestminqvalue == None or r['minqvalue'] == bestminqvalue:
+                        if bestminqvalue == None:
+                            bestminqvalue = r['minqvalue']
+                        yield r
+            specrows = {}
+            lastspec = spec
+        pep = row['pepseq']
+        mods = []
         if row['mods']:
-              for mod in row['mods'].split(','):
+            for mod in row['mods'].split(','):
                 m = re.search('^([A-Z(])(.*):(.*)$',mod)
                 delstr = "%+.3f"%(float(m.group(3)),)
                 aa = m.group(1)
-		pos = int(m.group(2))
+                pos = int(m.group(2))
                 if aa == '(':
                     aa = '['
                     pos = 0
-		elif pos == 1 and ('[',delstr) in cvmods:
-		    aa = '['
-		    pos = 0
-		elif pos == 1 and ('['+aa,delstr) in cvmods:
-		    aa='['+aa
+                elif pos == 1 and ('[',delstr) in cvmods:
+                    aa = '['
+                    pos = 0
+                elif pos == 1 and ('['+aa,delstr) in cvmods:
+                    aa='['+aa
                 name,delta,spec = cvmods[(aa,delstr)]
                 aa = aa[-1]
-		if aa == '[':
-		    aa = '-'
-		if spec == 'name':
-		    mods.append((pos,aa,delta,name))
-		else:
-		    mods.append((pos,aa,delta))
-	modstr = ",".join(map(str,sorted(mods)))
-	ion = (pep,modstr,row['charge'])
-	if ion not in specrows:
-	    specrows[ion] = dict((k,row[k]) for k in row.keys())
-	    specrows[ion]['minqvalue'] = float(row['qvalue'])
-	    specrows[ion]['qvalues'] = [ float(row['qvalue']) ]
-	    specrows[ion]['nanalysis'] = 1
-	    specrows[ion]['mods'] = mods
-	else:
-	    sc = set(specrows[ion]['scores'].split(','))
-	    sc.update(set(row['scores'].split(',')))
-	    specrows[ion]['scores'] = ",".join(sc)
-	    specrows[ion]['minqvalue'] = min(specrows[ion]['minqvalue'],float(row['qvalue']))
-	    specrows[ion]['qvalues'].append(float(row['qvalue']))
-	    specrows[ion]['nanalysis'] += 1
-	    
+                if aa == '[':
+                    aa = '-'
+                if spec == 'name':
+                    mods.append((pos,aa,delta,name))
+                else:
+                    mods.append((pos,aa,delta))
+        modstr = ",".join(map(str,sorted(mods)))
+        ion = (pep,modstr,row['charge'])
+        if ion not in specrows:
+            specrows[ion] = dict((k,row[k]) for k in row.keys())
+            specrows[ion]['minqvalue'] = float(row['qvalue'])
+            specrows[ion]['qvalues'] = [ float(row['qvalue']) ]
+            specrows[ion]['nanalysis'] = 1
+            specrows[ion]['mods'] = mods
+        else:
+            sc = set(specrows[ion]['scores'].split(','))
+            sc.update(set(row['scores'].split(',')))
+            specrows[ion]['scores'] = ",".join(sc)
+            specrows[ion]['minqvalue'] = min(specrows[ion]['minqvalue'],float(row['qvalue']))
+            specrows[ion]['qvalues'].append(float(row['qvalue']))
+            specrows[ion]['nanalysis'] += 1
+
     if lastspec != None and spec != lastspec:
-	bestminqvalue = None
-	for r in sorted(specrows.values(),key=lambda r: r['minqvalue']):
-	    if bestminqvalue == None or r['minqvalue'] == bestminqvalue:
-		if bestminqvalue == None:
-		    bestminqvalue = r['minqvalue']
-	        yield r
+        bestminqvalue = None
+        for r in sorted(specrows.values(),key=lambda r: r['minqvalue']):
+            if bestminqvalue == None or r['minqvalue'] == bestminqvalue:
+                if bestminqvalue == None:
+                    bestminqvalue = r['minqvalue']
+                yield r
 
 def generatepsms(idpdb,spectra):
     for f in spectra:
@@ -248,11 +248,11 @@ def generatepsms(idpdb,spectra):
         conn.row_factory = sqlite3.Row
         conn.text_factory = str
         cur = conn.cursor()
-	for ind in indexes:
-	    try:
-	        cur.execute(ind)
- 	    except sqlite3.OperationalError:
-		pass
+        for ind in indexes:
+            try:
+                cur.execute(ind)
+            except sqlite3.OperationalError:
+                pass
         lastspec = None
         result = None
         for row in mergepsms(cur.execute(query,(os.path.split(spectra)[1],))):
@@ -304,29 +304,29 @@ def generatepsms(idpdb,spectra):
                     laa = "-"
                 if raa == "":
                     raa = "-"
-		m = re.search(r'^([NYX]P_\d+\.\d+)\|$',pracc)
-	        if m:
-		    psm['Protein'].append(("RefSeq:"+m.group(1),laa,raa))
-		else:
-		    m = re.search(r'^((XXX|DECOY).*)\|$',pracc)
-		    if m:
-		        pass # psm['Protein'].append(("Decoy:"+m.group(1),))
-		    else:
-		        pass # psm['Protein'].append(("Unknown:"+pracc.rstrip('|'),laa,raa))
+                m = re.search(r'^([NYX]P_\d+\.\d+)\|$',pracc)
+                if m:
+                    psm['Protein'].append(("RefSeq:"+m.group(1),laa,raa))
+                else:
+                    m = re.search(r'^((XXX|DECOY).*)\|$',pracc)
+                    if m:
+                        pass # psm['Protein'].append(("Decoy:"+m.group(1),))
+                    else:
+                        pass # psm['Protein'].append(("Unknown:"+pracc.rstrip('|'),laa,raa))
             if len(psm['Protein']) > 0:
                 yield psm
 
 rowlimit=1e+20
 def limit(rows):
     for i,r in enumerate(rows):
-	if i >= rowlimit:
-	    break
-	yield r
+        if i >= rowlimit:
+            break
+        yield r
 
 from peptidescan.OutOfCoreTable import OutOfCoreSortedTable
 from peptidescan.PeptideRemapper import PeptideRemapper, UniProtIsoformAcc, RefSeqAcc, UCSCKGAcc, UniProtIsoformRefSeq, RefSeqUniProtIsoform
 t = OutOfCoreSortedTable(rows=limit(generatepsms(opts.idpdb,args)),headers=headers,
-			 key=lambda r: (r['SpectrumFile'],r['Scan']))
+                         key=lambda r: (r['SpectrumFile'],r['Scan']))
 pepmaps1 = map(lambda sdb: PeptideRemapper(map(lambda r: r['Peptide'], t), sdb, UniProtIsoformAcc(), preprocess=True), seqdb['UniProt'])
 pepmaps2 = map(lambda sdb: PeptideRemapper(map(lambda r: r['Peptide'], t), sdb, RefSeqAcc(), preprocess=True), seqdb['RefSeq'])
 pepmaps3 = map(lambda sdb: PeptideRemapper(map(lambda r: r['Peptide'], t), sdb, UCSCKGAcc(), preprocess=True, translation='F'), seqdb['UCSC'])
@@ -343,35 +343,35 @@ refseqorg=dict(human='H_sapiens',mouse='M_musculus')
 
 def getdburl(name,organism,version):
     if organism == 'Human':
-	taxa = 9606
+        taxa = 9606
     elif organism == 'Mouse':
-	taxa = 10090
+        taxa = 10090
     else:
-	raise RuntimeError("Bad organism!")
+        raise RuntimeError("Bad organism!")
     if name == 'UniProt':
-	return "http://www.uniprot.org/uniprot/?query=taxonomy%%3a%d+AND+keyword%%3a1185&force=yes&format=fasta&include=yes"%taxa
+        return "http://www.uniprot.org/uniprot/?query=taxonomy%%3a%d+AND+keyword%%3a1185&force=yes&format=fasta&include=yes"%taxa
     elif name == 'RefSeq':
-	return "ftp://ftp.ncbi.nlm.nih.gov/refseq/%s/mRNA_Prot/%s.protein.faa.gz"%(refseqorg[organism.lower()],
-										   organism.lower())
+        return "ftp://ftp.ncbi.nlm.nih.gov/refseq/%s/mRNA_Prot/%s.protein.faa.gz"%(refseqorg[organism.lower()],
+                                                                                   organism.lower())
     raise RuntimeError("Bad name!")
 
 def getdbsrc(name,organism,version):
     if name == 'UniProt':
-	return "DB source UniProt"
+        return "DB source UniProt"
     elif name == 'RefSeq':
-	return "DB source NCBI"
+        return "DB source NCBI"
     elif name in ('Unknown','Decoy'):
-	return None
+        return None
     raise RuntimeError("Bad name!")
 
 dborder = {'UniProt:Human':2,
-	   'RefSeq:Human':1,
-	   'UniProt:Mouse':4,
-	   'RefSeq:Mouse':3,
-	   'UniProt':6,
-	   'RefSeq':5,
-	   'Unknown':7,
-	   'Decoy':8}
+           'RefSeq:Human':1,
+           'UniProt:Mouse':4,
+           'RefSeq:Mouse':3,
+           'UniProt':6,
+           'RefSeq':5,
+           'Unknown':7,
+           'Decoy':8}
 accprefer = RefSeqUniProtIsoform().prefer
 
 print "MDBEGIN"
@@ -396,14 +396,14 @@ for psm in t:
     dbaccneeded = set(map(lambda acc: acc.rsplit('.',1)[0],map(itemgetter(0),psm['Protein'])))
     for pm in pepmaps1 + pepmaps2 + pepmaps3:
         dbid = getdbid(pm.seqdb)
-	dbidmap[dbid[0]] = pm
+        dbidmap[dbid[0]] = pm
         for pr in pm.proteins(psm['Peptide']):
             dbidneeded.add(dbid)
             try:
                 dbaccneeded.remove("RefSeq:"+pr[0].rsplit('.',1)[0])
             except KeyError:
                 pass
-                
+
     if len(dbaccneeded) > 0:
         dbidneeded.add(("RefSeq","RefSeq",None,None,None))
         # dbidneeded.add(("Decoy","Decoy",None,None,None))
@@ -418,79 +418,79 @@ for psm in t:
             print "Organism",organism
         if version:
             print "Release",version
-	if organism and name:
-	    print "URI",getdburl(name,organism,version)
-	if name and getdbsrc(name,organism,version):
+        if organism and name:
+            print "URI",getdburl(name,organism,version)
+        if name and getdbsrc(name,organism,version):
             print "DBSource",getdbsrc(name,organism,version)
-	if filename:
-	    print "Location",filename
+        if filename:
+            print "Location",filename
         print "SEQDBEND"
 
     print "PSMBEGIN"
     peptid = peptindex.add(psm['Peptide'])
     for key in "SpectrumFile Location FileFormat SpectrumID SpectrumIDFormat Scan Rank ChargeState ExperimentalMassToCharge Peptide".split():
-	if psm.get(key) not in (None,""):
-	    print key,psm[key]
+        if psm.get(key) not in (None,""):
+            print key,psm[key]
     for m in psm['Modification']:
-	print "Modification"," ".join(map(str,m))
+        print "Modification"," ".join(map(str,m))
     for key in scores:
-	if psm.get(key) not in (None,""):
-	    value = psm[key]
-	    key1 = re.sub(' ','\\ ',key)
-	    print "Score",key1,value
+        if psm.get(key) not in (None,""):
+            value = psm[key]
+            key1 = re.sub(' ','\\ ',key)
+            print "Score",key1,value
     for key in params:
-	if psm.get(key) not in (None,""):
-	    key1 = re.sub(' ','\\ ',key)
-	    print "Param",key1,psm[key]
+        if psm.get(key) not in (None,""):
+            key1 = re.sub(' ','\\ ',key)
+            print "Param",key1,psm[key]
     for key in specparams:
-	if psm.get(key) not in (None,""):
-	    key1 = re.sub(' ','\\ ',key)
-	    if isinstance(psm[key],basestring):
-	        print "SpecParam",key1,psm[key]
-	    else:
+        if psm.get(key) not in (None,""):
+            key1 = re.sub(' ','\\ ',key)
+            if isinstance(psm[key],basestring):
+                print "SpecParam",key1,psm[key]
+            else:
                 units = re.sub(' ','\\ ',psm[key][1])
                 print "SpecParam",key1,psm[key][0],units
-                
+
     seen = set()
     found = False
     for pm in pepmaps1:
-	dbid = getdbid(pm.seqdb)[0]
-	for pracc,laa,start,end,raa,prdefline,prlen in map(itemgetter(0,2,3,4,5,6,9),pm.proteins(psm['Peptide'])):
-	    # print pracc,laa,start,end,raa
-	    # if "UniProt:"+pracc == psm['Protein'][0]:
-	    # 	seen = True
-	    # seen.add("UniProt:"+pracc)
-	    print " ".join(map(str,["Protein",dbid+":"+pracc,laa[-1],raa[0],start+1,end,prlen,prdefline]))
-	    # print " ".join(map(str,["Protein",dbid+":"+pracc,laa,raa,start+1,end,prdefline]))
+        dbid = getdbid(pm.seqdb)[0]
+        for pracc,laa,start,end,raa,prdefline,prlen in map(itemgetter(0,2,3,4,5,6,9),pm.proteins(psm['Peptide'])):
+            # print pracc,laa,start,end,raa
+            # if "UniProt:"+pracc == psm['Protein'][0]:
+            #   seen = True
+            # seen.add("UniProt:"+pracc)
+            print " ".join(map(str,["Protein",dbid+":"+pracc,laa[-1],raa[0],start+1,end,prlen,prdefline]))
+            # print " ".join(map(str,["Protein",dbid+":"+pracc,laa,raa,start+1,end,prdefline]))
             protid = protindex.add(dbid+":"+pracc)
-	    prot2pept[protid].add(peptid)
-	    found = True
+            prot2pept[protid].add(peptid)
+            found = True
     for pm in pepmaps2:
-	dbid = getdbid(pm.seqdb)[0]
-	for pracc,laa,start,end,raa,prdefline,prlen in map(itemgetter(0,2,3,4,5,6,9),pm.proteins(psm['Peptide'])):
-	    # print pracc,laa,start,end,raa
-	    # if "RefSeq:"+pracc == psm['Protein'][0]:
-	    #	seen = True
-	    seen.add("RefSeq:"+pracc.rsplit('.',1)[0])
-	    print " ".join(map(str,["Protein",dbid+":"+pracc,laa[-1],raa[0],start+1,end,prlen,prdefline]))
-	    # print " ".join(map(str,["Protein",dbid+":"+pracc,laa,raa,start+1,end,prdefline]))
+        dbid = getdbid(pm.seqdb)[0]
+        for pracc,laa,start,end,raa,prdefline,prlen in map(itemgetter(0,2,3,4,5,6,9),pm.proteins(psm['Peptide'])):
+            # print pracc,laa,start,end,raa
+            # if "RefSeq:"+pracc == psm['Protein'][0]:
+            #   seen = True
+            seen.add("RefSeq:"+pracc.rsplit('.',1)[0])
+            print " ".join(map(str,["Protein",dbid+":"+pracc,laa[-1],raa[0],start+1,end,prlen,prdefline]))
+            # print " ".join(map(str,["Protein",dbid+":"+pracc,laa,raa,start+1,end,prdefline]))
             protid = protindex.add(dbid+":"+pracc)
-	    prot2pept[protid].add(peptid)
-	    found = True
+            prot2pept[protid].add(peptid)
+            found = True
     for pm in pepmaps3:
-	dbid = getdbid(pm.seqdb)[0]
-	for pracc,laa,start,end,raa,prdefline,prlen in map(itemgetter(0,2,3,4,5,6,9),pm.proteins(psm['Peptide'])):
-	    print " ".join(map(str,["Protein",dbid+":"+pracc,laa[-1],raa[0],start+1,end,prlen,prdefline]))
-	    # print " ".join(map(str,["Protein",dbid+":"+pracc,laa,raa,start+1,end,prdefline]))
+        dbid = getdbid(pm.seqdb)[0]
+        for pracc,laa,start,end,raa,prdefline,prlen in map(itemgetter(0,2,3,4,5,6,9),pm.proteins(psm['Peptide'])):
+            print " ".join(map(str,["Protein",dbid+":"+pracc,laa[-1],raa[0],start+1,end,prlen,prdefline]))
+            # print " ".join(map(str,["Protein",dbid+":"+pracc,laa,raa,start+1,end,prdefline]))
             protid = protindex.add(dbid+":"+pracc)
-	    prot2pept[protid].add(peptid)
-	    found = True
+            prot2pept[protid].add(peptid)
+            found = True
     for pr in psm['Protein']:
-	if pr[0].rsplit('.',1)[0] not in seen:
+        if pr[0].rsplit('.',1)[0] not in seen:
             print "Protein"," ".join(map(str,pr))
             protid = protindex.add(pr[0])
-	    prot2pept[protid].add(peptid)
-	    found = True
+            prot2pept[protid].add(peptid)
+            found = True
     assert found, "Cannot map peptide "+psm['Peptide']+" to any protein"
     print "PSMEND"
 
@@ -506,7 +506,7 @@ def prprefer(prid1,prid2):
     if c1 != 0:
         return c1
     if dbid1 in ('RefSeq','Unknown','Decoy'):
-	return accprefer((prid1,acc1),(prid2,acc2))
+        return accprefer((prid1,acc1),(prid2,acc2))
     dl1 = dbidmap[dbid1].protdb.get(acc1).defline
     dl2 = dbidmap[dbid2].protdb.get(acc2).defline
     return accprefer((prid1,dl1),(prid2,dl2))
@@ -542,32 +542,32 @@ for i,(prids,pepids) in enumerate(sorted(comp,key=lambda t: -max(map(lambda prid
     print "Param - distinct\\ peptide\\ sequences",len(pepids)
     seen = set()
     for prid in sorted(prids,key=lambda prid: (1*(prid not in dominant),-len(prot2pept[prid]))):
-      if prid not in seen:
-        assert prid in dom.equivalentto[prid]
-	for j,prid1 in enumerate(sorted(dom.equivalentto[prid],cmp=prprefer)):
-	  if j == 0:
-	    prid2 = prid1
-	  prstr1 = protindex.string(prid1)
-	  dbid1,pracc1 = prstr1.rsplit(':',1)
-	  print "Protein",prstr1
-          # print "Param",prstr1,"search\\ engine\\ specific\\ score",len(prot2pept[prid1])
-	  if len(seen) == 0:
-	    print "Param",prstr1,"anchor\\ protein"
-	  elif j > 0:
-	    print "Param",prstr1,"sequence\\ same-set\\ protein",protindex.string(prid2)
-          print "Param",prstr1,"distinct\\ peptide\\ sequences",len(prot2pept[prid1])
-	  if dbid1 not in ('RefSeq','Unknown','Decoy'):
-	    print "Param",prstr1,"sequence\\ coverage",round(100.0*dbidmap[dbid1].protdb.get(pracc1).coverage(),2),"percent"
-	  seen.add(prid1)
-	for prid1 in set(dom.containedby[prid] - seen):
-	  prstr1 = protindex.string(prid1)
-	  dbid1,pracc1 = prstr1.rsplit(':',1)
-	  print "Protein",prstr1
-          # print "Param",prstr1,"search\\ engine\\ specific\\ score",len(prot2pept[prid1])
-	  print "Param",prstr1,"sequence\\ sub-set\\ protein",protindex.string(prid2)
-          print "Param",prstr1,"distinct\\ peptide\\ sequences",len(prot2pept[prid1])
-	  if dbid1 not in ('RefSeq','Unknown','Decoy'):
-	    print "Param",prstr1,"sequence\\ coverage",round(100.0*dbidmap[dbid1].protdb.get(pracc1).coverage(),2),"percent"
-	  # print "Param",protindex.string(prid1),"non-leading\\ protein"
-	  seen.add(prid1)
+        if prid not in seen:
+            assert prid in dom.equivalentto[prid]
+            for j,prid1 in enumerate(sorted(dom.equivalentto[prid],cmp=prprefer)):
+                if j == 0:
+                    prid2 = prid1
+                prstr1 = protindex.string(prid1)
+                dbid1,pracc1 = prstr1.rsplit(':',1)
+                print "Protein",prstr1
+                # print "Param",prstr1,"search\\ engine\\ specific\\ score",len(prot2pept[prid1])
+                if len(seen) == 0:
+                    print "Param",prstr1,"anchor\\ protein"
+                elif j > 0:
+                    print "Param",prstr1,"sequence\\ same-set\\ protein",protindex.string(prid2)
+                print "Param",prstr1,"distinct\\ peptide\\ sequences",len(prot2pept[prid1])
+                if dbid1 not in ('RefSeq','Unknown','Decoy'):
+                    print "Param",prstr1,"sequence\\ coverage",round(100.0*dbidmap[dbid1].protdb.get(pracc1).coverage(),2),"percent"
+                seen.add(prid1)
+            for prid1 in set(dom.containedby[prid] - seen):
+                prstr1 = protindex.string(prid1)
+                dbid1,pracc1 = prstr1.rsplit(':',1)
+                print "Protein",prstr1
+                # print "Param",prstr1,"search\\ engine\\ specific\\ score",len(prot2pept[prid1])
+                print "Param",prstr1,"sequence\\ sub-set\\ protein",protindex.string(prid2)
+                print "Param",prstr1,"distinct\\ peptide\\ sequences",len(prot2pept[prid1])
+                if dbid1 not in ('RefSeq','Unknown','Decoy'):
+                    print "Param",prstr1,"sequence\\ coverage",round(100.0*dbidmap[dbid1].protdb.get(pracc1).coverage(),2),"percent"
+                # print "Param",protindex.string(prid1),"non-leading\\ protein"
+                seen.add(prid1)
     print "PRGRPEND"

@@ -15,7 +15,7 @@ def fopen(filename):
 
 def typecast(d):
     d1 = {}
-    for k,v in d.items():
+    for k,v in list(d.items()):
         try:
             v1 = v
             v1 = float(v)
@@ -47,19 +47,19 @@ class CDAP_NISTPSM_CPTAC2(object):
     OriginalPrecursorMz PrecursorScanNum PhospoRSPeptide TMTFlags
     """.split()
     _scores = """
-    DeNovoScore MSGFScore SpecEvalue Evalue Qvalue PepQvalue 
+    DeNovoScore MSGFScore SpecEvalue Evalue Qvalue PepQvalue
     """.split()
     _params = """
-    QueryPrecursorMz 
+    QueryPrecursorMz
     PrecursorError(ppm)
     PrecursorArea PrecursorRelAb RTAtPrecursorHalfElution
     AmbiguousMatch PrecursorPurity FractionDecomposition HCDEnergy
     iTRAQ114 iTRAQ115 iTRAQ116 iTRAQ117
     iTRAQFlags iTRAQTotalAb iTRAQFractionOfTotalAb
     TMT10-126 TMT10-127N TMT10-127C TMT10-128N TMT10-128C
-    TMT10-129N TMT10-129C TMT10-130N TMT10-130C TMT10-131 
+    TMT10-129N TMT10-129C TMT10-130N TMT10-130C TMT10-131
     TMT10-Flags TMT10-FractionOfTotalAb TMT10-TotalAb
-    TMT6-126 TMT6-127 TMT6-128 TMT6-129 TMT6-130 TMT6-131 
+    TMT6-126 TMT6-127 TMT6-128 TMT6-129 TMT6-130 TMT6-131
     TMT6-Flags TMT6-FractionOfTotalAb TMT6-TotalAb
     TMT11-126C TMT11-127N TMT11-127C TMT11-128N TMT11-128C
     TMT11-129N TMT11-129C TMT11-130N TMT11-130C TMT11-131N TMT11-131C
@@ -68,23 +68,23 @@ class CDAP_NISTPSM_CPTAC2(object):
     """.split()
     expected_keys = ignore + _scores + _params
     ptms = """
-    [	+229.163	UNIMOD:737	229.162932
-    K	+229.163	UNIMOD:737	229.162932
-    [	+144.102	UNIMOD:214	144.102063
-    K	+144.102	UNIMOD:214	144.102063
-    M	+15.995		Oxidation       15.994915
-    C	+57.021		Carbamidomethyl 57.021464
-    Q	+0.984		Deamidated	0.984016
-    N	+0.984		Deamidated	0.984016
-    [Q	-17.027		Gln->pyro-Glu	-17.026549
-    [Q	-17.026		Gln->pyro-Glu	-17.026549
-    [E	-18.011		Glu->pyro-Glu 	-18.010565
-    S	+79.966		Phospho		79.966331
-    T	+79.966		Phospho		79.966331
-    Y	+79.966		Phospho		79.966331
+    [   +229.163        UNIMOD:737      229.162932
+    K   +229.163        UNIMOD:737      229.162932
+    [   +144.102        UNIMOD:214      144.102063
+    K   +144.102        UNIMOD:214      144.102063
+    M   +15.995         Oxidation       15.994915
+    C   +57.021         Carbamidomethyl 57.021464
+    Q   +0.984          Deamidated      0.984016
+    N   +0.984          Deamidated      0.984016
+    [Q  -17.027         Gln->pyro-Glu   -17.026549
+    [Q  -17.026         Gln->pyro-Glu   -17.026549
+    [E  -18.011         Glu->pyro-Glu   -18.010565
+    S   +79.966         Phospho         79.966331
+    T   +79.966         Phospho         79.966331
+    Y   +79.966         Phospho         79.966331
     [   +42.011         Acetyl          42.010565
     K   +42.011         Acetyl          42.010565
-    K   +114.043	GG		114.042927
+    K   +114.043        GG              114.042927
     """
     keymap = {
         'DeNovoScore': ('MS-GF','DeNovoScore'),
@@ -93,7 +93,7 @@ class CDAP_NISTPSM_CPTAC2(object):
         'Evalue':      ('MS-GF','EValue'),
         'Qvalue':      ('MS-GF','QValue'),
         'PepQvalue':   ('MS-GF','PepQValue')
-    }        
+    }
     def __init__(self,filenames,**kwargs):
         self.filter = kwargs.get('filter')
         self.filenames = filenames
@@ -124,15 +124,15 @@ class CDAP_NISTPSM_CPTAC2(object):
         md['Threshold'] = 'MS-GF:QValue 0.01'
         md['AnalysisSoftware'] = 'MS-GF+'
         md['OutputFormat'] = "CPTAC-DCC:mzIdentML v1.2.2"
-        md['Software'] =  filter(None,map(str.strip,("""
-	     MS-GF+ Release (v2017.01.27) (27 Jan 2017)
+        md['Software'] =  [_f for _f in map(str.strip,("""
+             MS-GF+ Release (v2017.01.27) (27 Jan 2017)
              CPTAC-CDAP v1.1
-        """.splitlines())))
+        """.splitlines())) if _f]
         return md
 
     def seqdbs(self,proteins=None):
-	if proteins:
-	    return map(itemgetter(0),proteins)
+        if proteins:
+            return list(map(itemgetter(0),proteins))
         if self.keepdecoys:
             return ["RefSeq","UniProt","Decoy"]
         return ["RefSeq","UniProt"]
@@ -164,14 +164,14 @@ class CDAP_NISTPSM_CPTAC2(object):
             key1 = ('['+modpep[1],delstr)
             # assert (key0 in self.cvmods or key1 in self.cvmods), \
             #        "Keys not in cvmods: %s,%s"%(key0,key1,) + '\n' + str(r)
-            if key1 in self.cvmods:	
+            if key1 in self.cvmods:
                 name,delta = self.cvmods[key1]
                 pos = 1; res = modpep[1]
             elif key0 in self.cvmods:
                 name,delta = self.cvmods[key0]
-	    else:
-	        delta = float(delstr)
-		name = ""
+            else:
+                delta = float(delstr)
+                name = ""
             mods.append((pos,res,delta,name))
         j = 0
         for i in range(1,len(modpep),2):
@@ -180,18 +180,18 @@ class CDAP_NISTPSM_CPTAC2(object):
             if modpep[i+1] != "":
                 aa = modpep[i]
                 delstr = modpep[i+1]
-		if (aa,delstr) in self.cvmods:
+                if (aa,delstr) in self.cvmods:
                     name,delta = self.cvmods[(aa,delstr)]
-		else:
-		    delta = float(delstr)
-		    name = ""
+                else:
+                    delta = float(delstr)
+                    name = ""
                 mods.append((j,aa,delta,name))
         mods.sort(key=lambda t: (t[0],t[2]))
         return pepseq,mods
 
     def extract_specfile(self,r):
         m = re.search(r'^(.*)\.(raw|mzml)',r['FileName'],re.I)
-        assert m, r['FileName'] 
+        assert m, r['FileName']
         return os.path.split(m.group(1))[1]
 
     def decoyPrefix(self):
@@ -199,89 +199,89 @@ class CDAP_NISTPSM_CPTAC2(object):
 
     def psms(self):
         for filename in self.filenames:
-          reader = DictReader(fopen(filename),dialect='excel-tab')
-          for r in reader:
-            if not r.get('PeptideSequence'):
-                continue
-            if self.filter != None and not eval(self.filter,None,typecast(r)):
-                continue
-            psm = {}
-            spectra = self.extract_specfile(r)
-            pepseq,mods = self.extract_mods(r)
-            psm['Peptide'] = pepseq
-            psm['Rank'] = 1
-            psm['Modification'] = mods
-            psm['SpectrumFile'] = spectra
-            psm['_fullpath'] = filename
-            psm['Location'] = "%s.mzML"%(spectra,)
-            psm['SpectrumID'] = "controllerType=0 controllerNumber=1 scan=%s"%(r['ScanNum'],)
-            psm['Scan'] = int(r['ScanNum'])
-            psm['ChargeState'] = int(r['QueryCharge'])
-            if 'PhospoRSPeptide' in r:
-                psm['PhosphoRSPeptide'] = r['PhospoRSPeptide']
-	    if 'TMTFlags' in r and 'TMT10-126' in r:
-		r['TMT10-Flags'] = r['TMTFlags']
-            for k,v in r.items():
-                if k and v:
-                    assert k in self.expected_keys, "Bad key %s in row %r"%(k,r)
-            for k in self._scores + self._params:
-                if k in r:
-                    if k in self.keymap:
-                        psm[":".join(self.keymap[k])] = r[k]
-                    else:
-                        psm["CPTAC-CDAP:"+k] = r[k]
-
-            praccs = r['Protein'].split(';')
-            psm['Protein'] = []
-            ndecoy = 0; ntarget = 0;
-            decoy_prefix = 'XXX_'
-            for pracc in praccs:
-                isdecoy = False
-                if pracc.startswith(decoy_prefix):
-                    isdecoy = True
-                    pracc = pracc[len(decoy_prefix):]
-                m = re.search(r'^(.*)\(pre=(.),post=(.)\)$',pracc)
-                pracc = m.group(1)
-                laa = m.group(2)
-                raa = m.group(3)
-
-                source = None;
-
-                m = re.search(r'^(gi\|\d+\|)?ref\|([^|]*)\|$',pracc)
-                if m:
-                    source = "RefSeq"; pracc = m.group(2)
-                    
-                m = re.search(r'^([NXYA]P_[^|]*)$',pracc)
-                if m:
-                    source = "RefSeq"; pracc = m.group(1)
-
-                m = re.search(r'^(sp|tr)\|([^|]*)\|([^|]*)$',pracc)
-                if m:
-                    source = "UniProt"; pracc = m.group(2)
-
-                if not source:
-                    raise(RuntimeError("Protein accession %s not matched!!!"%(pracc,)))
-
-                if not isdecoy:
-                    psm['Protein'].append((source,pracc,laa,raa))
-                    ntarget += 1
-                elif self.keepdecoys:
-                    psm['Protein'].append(("Decoy",decoy_prefix+pracc,laa,raa))
-                    ndecoy += 1
-                    
-	    if self.keepdecoys:
-		if ndecoy > 0:
-		    psm['decoy'] = True
-		else:
-		    psm['decoy'] = False
-	    else:
-                if ntarget == 0:
+            reader = DictReader(fopen(filename),dialect='excel-tab')
+            for r in reader:
+                if not r.get('PeptideSequence'):
                     continue
+                if self.filter != None and not eval(self.filter,None,typecast(r)):
+                    continue
+                psm = {}
+                spectra = self.extract_specfile(r)
+                pepseq,mods = self.extract_mods(r)
+                psm['Peptide'] = pepseq
+                psm['Rank'] = 1
+                psm['Modification'] = mods
+                psm['SpectrumFile'] = spectra
+                psm['_fullpath'] = filename
+                psm['Location'] = "%s.mzML"%(spectra,)
+                psm['SpectrumID'] = "controllerType=0 controllerNumber=1 scan=%s"%(r['ScanNum'],)
+                psm['Scan'] = int(r['ScanNum'])
+                psm['ChargeState'] = int(r['QueryCharge'])
+                if 'PhospoRSPeptide' in r:
+                    psm['PhosphoRSPeptide'] = r['PhospoRSPeptide']
+                if 'TMTFlags' in r and 'TMT10-126' in r:
+                    r['TMT10-Flags'] = r['TMTFlags']
+                for k,v in list(r.items()):
+                    if k and v:
+                        assert k in self.expected_keys, "Bad key %s in row %r"%(k,r)
+                for k in self._scores + self._params:
+                    if k in r:
+                        if k in self.keymap:
+                            psm[":".join(self.keymap[k])] = r[k]
+                        else:
+                            psm["CPTAC-CDAP:"+k] = r[k]
 
-            yield psm
+                praccs = r['Protein'].split(';')
+                psm['Protein'] = []
+                ndecoy = 0; ntarget = 0;
+                decoy_prefix = 'XXX_'
+                for pracc in praccs:
+                    isdecoy = False
+                    if pracc.startswith(decoy_prefix):
+                        isdecoy = True
+                        pracc = pracc[len(decoy_prefix):]
+                    m = re.search(r'^(.*)\(pre=(.),post=(.)\)$',pracc)
+                    pracc = m.group(1)
+                    laa = m.group(2)
+                    raa = m.group(3)
+
+                    source = None;
+
+                    m = re.search(r'^(gi\|\d+\|)?ref\|([^|]*)\|$',pracc)
+                    if m:
+                        source = "RefSeq"; pracc = m.group(2)
+
+                    m = re.search(r'^([NXYA]P_[^|]*)$',pracc)
+                    if m:
+                        source = "RefSeq"; pracc = m.group(1)
+
+                    m = re.search(r'^(sp|tr)\|([^|]*)\|([^|]*)$',pracc)
+                    if m:
+                        source = "UniProt"; pracc = m.group(2)
+
+                    if not source:
+                        raise RuntimeError
+
+                    if not isdecoy:
+                        psm['Protein'].append((source,pracc,laa,raa))
+                        ntarget += 1
+                    elif self.keepdecoys:
+                        psm['Protein'].append(("Decoy",decoy_prefix+pracc,laa,raa))
+                        ndecoy += 1
+
+                if self.keepdecoys:
+                    if ndecoy > 0:
+                        psm['decoy'] = True
+                    else:
+                        psm['decoy'] = False
+                else:
+                    if ntarget == 0:
+                        continue
+
+                yield psm
 
     def __iter__(self):
-        return self.psms()            
+        return self.psms()
 
 
 class CDAP_NISTPSM_CPTAC2_WITH_DECOYS(CDAP_NISTPSM_CPTAC2):
@@ -290,7 +290,7 @@ class CDAP_NISTPSM_CPTAC2_WITH_DECOYS(CDAP_NISTPSM_CPTAC2):
 class PepArML(object):
 
     # spectra_set,start_scan,end_scan,precursor_mz,assumed_charge,precursor_neutral_mass,calc_neutral_pep_mass,massdiff,leftaa,peptide,rightaa,mods,protein,decoy,nagree,estfdr,DeNovoScore-g1,EValue-g1,RawScore-g1,SpecEValue-g1,eval-g1,rank-g1,eval-o1,mzhits-o1,pval-o1,rank-o1,b_ions-t1,b_score-t1,eval-t1,fI-t1,hyperscore-t1,maxI-t1,pval-t1,rank-t1,sumI-t1,y_ions-t1,y_score-t1,peptide_len,precursor_intensity,activation_method,retention_time,basepeak_intensity,total_ion_current,c13massdiff,c13peak,c13relint,icscore,hydrophobicity-kd,gravy,hydrophilicity-hw,isoelectric-point,PPP0008,PPP0160,PPP0161,PPP0180,PPP0196,PPP0197,PPP0313,PPP0502,PPP0787,PPP0788,PPP0823,PPP0877,PPP1006,mapped,ntspec,ctspec,nspect,misscl,rtpred,rtdelta,siteprob,pred,pepfdr,decoypeps,2udpr,3udpr
-    
+
     _scores = """
     nagree estfdr pred eval-g1 eval-o1 eval-t1 eval-s1 eval-m1 eval-y1 eval-c1 eval-k1
     """.split()
@@ -299,22 +299,22 @@ class PepArML(object):
     """.split()
 
     ptms = """
-    [	+144.102	UNIMOD:214	144.102063
-    K	+144.102	UNIMOD:214	144.102063
-    M	+15.995		Oxidation       15.994915
-    C	+57.021		Carbamidomethyl 57.021464
-    Q	+0.984		Deamidated	0.984016
-    N	+0.984		Deamidated	0.984016
-    [Q	-17.027		Gln->pyro-Glu	-17.026549
-    [Q	-17.026		Gln->pyro-Glu	-17.026549
-    [C  -17.027         Ammonia-loss	-17.026549
-    [E	-18.011		Glu->pyro-Glu 	-18.010565
-    S	+79.966		Phospho		79.966331
-    T	+79.966		Phospho		79.966331
-    Y	+79.966		Phospho		79.966331
+    [   +144.102        UNIMOD:214      144.102063
+    K   +144.102        UNIMOD:214      144.102063
+    M   +15.995         Oxidation       15.994915
+    C   +57.021         Carbamidomethyl 57.021464
+    Q   +0.984          Deamidated      0.984016
+    N   +0.984          Deamidated      0.984016
+    [Q  -17.027         Gln->pyro-Glu   -17.026549
+    [Q  -17.026         Gln->pyro-Glu   -17.026549
+    [C  -17.027         Ammonia-loss    -17.026549
+    [E  -18.011         Glu->pyro-Glu   -18.010565
+    S   +79.966         Phospho         79.966331
+    T   +79.966         Phospho         79.966331
+    Y   +79.966         Phospho         79.966331
     [   +42.011         Acetyl          42.010565
     K   +42.011         Acetyl          42.010565
-    K   +114.043	GG		114.042927
+    K   +114.043        GG              114.042927
     """
 
     keymap = {
@@ -330,7 +330,7 @@ class PepArML(object):
         'estfdr':      ('PepArML','QValue'),
         'pred':        ('PepArML','Confidence'),
         'siteprob':    ('PepArML','SiteLocalization'),
-    }   
+    }
 
     def __init__(self,filenames,**kwargs):
         self.filter = kwargs.get('filter')
@@ -361,9 +361,9 @@ class PepArML(object):
         md['SpectrumIDFormat'] = 'Thermo nativeID format'
         md['AnalysisSoftware'] = 'PepArML'
         md['Threshold'] = 'PepArML:QValue 0.0031'
-        md['Software'] =  filter(None,map(str.strip,("""
+        md['Software'] =  [_f for _f in map(str.strip,("""
         PepArML http://grg.tn/PepArML
-        """.splitlines())))
+        """.splitlines())) if _f]
         return md
 
     def seqdbs(self,proteins=None):
@@ -409,7 +409,7 @@ class PepArML(object):
             mods.append((pos,aa,delta,name))
         mods.sort(key=lambda t: (t[0],t[2]))
         return mods
-    
+
     def psms(self):
         for filename in self.filenames:
             reader = DictReader(fopen(filename))
@@ -444,7 +444,7 @@ class PepArML(object):
                 yield psm
 
     def __iter__(self):
-        return self.psms()                
+        return self.psms()
 
 class UMich_CPTAC3_PGDAC(object):
 
@@ -462,14 +462,14 @@ class UMich_CPTAC3_PGDAC(object):
 
     keepdecoys = False
 
-    _scores = map(str.strip,filter(None,"""
+    _scores = list(map(str.strip,[_f for _f in """
 Expectation
 Hyperscore
 Nextscore
 PeptideProphet Probability
 probability
-    """.splitlines()))
-    _params = map(str.strip,filter(None,"""
+    """.splitlines() if _f]))
+    _params = list(map(str.strip,[_f for _f in """
 Number of Phospho Sites
 Phospho Site Localization
 TMT10-126
@@ -481,7 +481,7 @@ TMT10-129N
 TMT10-129C
 TMT10-130N
 TMT10-130C
-TMT10-131 
+TMT10-131
 TMT11-126C
 TMT11-127N
 TMT11-127C
@@ -493,29 +493,29 @@ TMT11-130N
 TMT11-130C
 TMT11-131N
 TMT11-131C
-    """.splitlines()))
+    """.splitlines() if _f]))
     keymap = {
       'probability': ('probability',),
-    }        
+    }
     ptms = """
-    [	+229.163	UNIMOD:737	229.162932
-    K	+229.163	UNIMOD:737	229.162932
-    [	+144.102	UNIMOD:214	144.102063
-    K	+144.102	UNIMOD:214	144.102063
-    M	+15.995		Oxidation       15.994915
-    C	+57.021		Carbamidomethyl 57.021464
-    C	+57.022		Carbamidomethyl 57.021464
-    Q	+0.984		Deamidated	0.984016
-    N	+0.984		Deamidated	0.984016
-    [Q	-17.027		Gln->pyro-Glu	-17.026549
-    [Q	-17.026		Gln->pyro-Glu	-17.026549
-    [E	-18.011		Glu->pyro-Glu 	-18.010565
-    S	+79.966		Phospho		79.966331
-    T	+79.966		Phospho		79.966331
-    Y	+79.966		Phospho		79.966331
+    [   +229.163        UNIMOD:737      229.162932
+    K   +229.163        UNIMOD:737      229.162932
+    [   +144.102        UNIMOD:214      144.102063
+    K   +144.102        UNIMOD:214      144.102063
+    M   +15.995         Oxidation       15.994915
+    C   +57.021         Carbamidomethyl 57.021464
+    C   +57.022         Carbamidomethyl 57.021464
+    Q   +0.984          Deamidated      0.984016
+    N   +0.984          Deamidated      0.984016
+    [Q  -17.027         Gln->pyro-Glu   -17.026549
+    [Q  -17.026         Gln->pyro-Glu   -17.026549
+    [E  -18.011         Glu->pyro-Glu   -18.010565
+    S   +79.966         Phospho         79.966331
+    T   +79.966         Phospho         79.966331
+    Y   +79.966         Phospho         79.966331
     [   +42.011         Acetyl          42.010565
     K   +42.011         Acetyl          42.010565
-    K   +114.043	GG		114.042927
+    K   +114.043        GG              114.042927
     """
 
     def __init__(self,filenames,**kwargs):
@@ -548,13 +548,13 @@ TMT11-131C
         md['Threshold'] = ""
         md['AnalysisSoftware'] = ""
         md['OutputFormat'] = "CPTAC-DCC:mzIdentML v1.2.2"
-        md['Software'] =  filter(None,map(str.strip,("""
-        """.splitlines())))
+        md['Software'] =  [_f for _f in map(str.strip,("""
+        """.splitlines())) if _f]
         return md
 
     def seqdbs(self,proteins=None):
-	if proteins:
-	    return map(itemgetter(0),proteins)
+        if proteins:
+            return list(map(itemgetter(0),proteins))
         if self.keepdecoys:
             return ["RefSeq","UniProt","Decoy"]
         return ["RefSeq","UniProt"]
@@ -608,7 +608,7 @@ TMT11-131C
                 mods.append((pos,aa,delta,name))
             mods.sort(key=lambda t: (t[0],t[2]))
         return mods
-    
+
     def psms(self):
         for filename in self.filenames:
             reader = DictReader(fopen(filename),dialect='excel-tab')
@@ -628,7 +628,7 @@ TMT11-131C
                 psm['SpectrumID'] = "controllerType=0 controllerNumber=1 scan=%s"%(scan,)
                 psm['Scan'] = scan
                 psm['ChargeState'] = int(r['Charge'])
-		psm['probability'] = float(r['PeptideProphet Probability'])
+                psm['probability'] = float(r['PeptideProphet Probability'])
 
                 for k in self._scores + self._params:
                     if k in r:
@@ -654,10 +654,10 @@ TMT11-131C
                         psm['UMich:'+l] = r[h]
                 else:
                     if len(quant) > 0:
-                        raise(RuntimeError("Can't figure out labels..."))
+                        raise RuntimeError
 
-		praccs = [r['Protein']]
-                praccs.extend(map(str.strip,r['Mapped Proteins'].split(',')))
+                praccs = [r['Protein']]
+                praccs.extend(list(map(str.strip,r['Mapped Proteins'].split(','))))
                 ndecoy = 0; ntarget = 0;
                 decoy_prefix = 'rev_'
                 psm['Protein'] = []
@@ -670,7 +670,7 @@ TMT11-131C
                     if pracc.startswith(decoy_prefix):
                         isdecoy = True
                         pracc = pracc[len(decoy_prefix):]
-                    
+
                     source = None;
 
                     m = re.search(r'^([NXYA]P_[^|]*)$',pracc)
@@ -682,7 +682,7 @@ TMT11-131C
                         source = "UniProt"; pracc = m.group(2)
 
                     if not source:
-                        raise(RuntimeError("Protein accession %s not matched!!!"%(pracc,)))
+                        raise RuntimeError
 
                     if not isdecoy:
                         psm['Protein'].append((source,pracc,None,None))
@@ -701,13 +701,13 @@ TMT11-131C
                         continue
 
                 yield psm
-                
+
     def __iter__(self):
-        return self.psms()                
+        return self.psms()
 
 class UMich_CPTAC3_PGDAC_WITH_DECOYS(UMich_CPTAC3_PGDAC):
     keepdecoys = True
-        
+
 class AddMZMLFields(object):
 
     specparams = ['intensity of precursor ion','retention time']
@@ -744,8 +744,8 @@ class AddMZMLFields(object):
 
 def getParser(fmt):
     if fmt in parsers:
-	return eval(fmt)
+        return eval(fmt)
     raise RuntimeError("Bad PSM parser: %s"%fmt)
-    
+
 def getParsers():
     return parsers

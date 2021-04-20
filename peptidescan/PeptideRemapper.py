@@ -1,8 +1,8 @@
 
 import sys,re
-from fastalib import fasta
-from ProteinHitDb import ProteinDatabase
-from OutOfCoreTable import *
+from .fastalib import fasta
+from .ProteinHitDb import ProteinDatabase
+from .OutOfCoreTable import *
 from collections import defaultdict
 
 __all__ = [ 'AccessionRules', 'AccessionRuleFactory',
@@ -38,11 +38,11 @@ def TestAccessionRules(description,rules=None):
             if cls.noauto:
                 continue
             rules.append(cls())
-        rules.append(FirstWord())            
+        rules.append(FirstWord())
     for r in rules:
         acc,dsc = r(description)
-	# print acc,dsc,r
-	if acc:
+        # print acc,dsc,r
+        if acc:
             return r
     return None
 
@@ -51,26 +51,26 @@ class RegExAcc:
     def __call__(self,description):
         description = self.normalize(description)
         acc = self.accrex.search(description)
-	# print self.__class__.__name__,description,acc.group(self.accgrp) if acc else "-"
-	if acc == None:
-	    return None,None
+        # print self.__class__.__name__,description,acc.group(self.accgrp) if acc else "-"
+        if acc == None:
+            return None,None
         if self.dscrex:
             dsc = self.dscrex.search(description)
         else:
             return acc.group(self.accgrp),None
         if dsc == None:
-	    raise RuntimeError("Description regex doesn't match:\n  "+description)
+            raise RuntimeError("Description regex doesn't match:\n  "+description)
         return acc.group(self.accgrp),dsc.group(self.dscgrp)
     def normalize(self,description):
-        return description.lstrip('>')       
+        return description.lstrip('>')
     def split(self,description):
         return self(description)
     def shortacc(self,acc):
-	return None
+        return None
     def url(self,description):
         # print >>sys.stderr, self
-	if not hasattr(self,'urlrex') or not hasattr(self,'urltmpl'):
-	    return None
+        if not hasattr(self,'urlrex') or not hasattr(self,'urltmpl'):
+            return None
         # print >>sys.stderr, description
         description = self.normalize(description)
         urlfields = self.urlrex.search(description)
@@ -104,42 +104,42 @@ class RegExAcc:
         return dsc.group(self.entrygrp)
     @staticmethod
     def prefer(pr1,pr2):
-	pr1id,pr1defline = pr1
+        pr1id,pr1defline = pr1
         pr2id,pr2defline = pr2
         cmps = set()
         for badword in "predicted hypothetical isoform uncharacterized putative cDNA homolog pseudogene LOC\\d+ like \\w+-like readthrough R000\\w+ S000\\w+ XXX_\\w+".split():
             c = cmp(1*(re.search(r'\b%s\b'%badword,pr1defline,re.I)!=None),
-	            1*(re.search(r'\b%s\b'%badword,pr2defline,re.I)!=None))
+                    1*(re.search(r'\b%s\b'%badword,pr2defline,re.I)!=None))
             cmps.add(c)
-	if -1 in cmps and 1 not in cmps:
-	    return -1
-	if 1 in cmps and -1 not in cmps:
-	    return 1
-	if pr1defline in pr2defline:
-	    return -1
-	elif pr2defline in pr1defline:
-	    return 1
-	words1 = pr1defline.split()
-	words2 = pr2defline.split()
-	if words1[1:-1] == words2[1:-1]:
-	    c = cmp(words1[-1],words2[-1])
-	    if c != 0:
-		return c
+        if -1 in cmps and 1 not in cmps:
+            return -1
+        if 1 in cmps and -1 not in cmps:
+            return 1
+        if pr1defline in pr2defline:
+            return -1
+        elif pr2defline in pr1defline:
+            return 1
+        words1 = pr1defline.split()
+        words2 = pr2defline.split()
+        if words1[1:-1] == words2[1:-1]:
+            c = cmp(words1[-1],words2[-1])
+            if c != 0:
+                return c
         if words1[0] != words2[0]:
             return cmp(words1[0],words2[0])
         return cmp(pr1,pr2)
     def prefermatrix(self,prlist):
         for i,pr in enumerate(prlist):
-	    print i,pr[0],pr[1]
-	print " ",
-	for i,pr in enumerate(prlist):
-	    print i,
-	print 
-	for i,pr in enumerate(prlist):
-	    print i,
-	    for pr1 in prlist:
-		print "." if pr == pr1 else ("<" if (self.prefer(pr,pr1)<0) else "^"),
-	    print
+            print(i,pr[0],pr[1])
+        print(" ", end=' ')
+        for i,pr in enumerate(prlist):
+            print(i, end=' ')
+        print()
+        for i,pr in enumerate(prlist):
+            print(i, end=' ')
+            for pr1 in prlist:
+                print("." if pr == pr1 else ("<" if (self.prefer(pr,pr1)<0) else "^"), end=' ')
+            print()
 
 class FirstWord(RegExAcc):
     noauto = True
@@ -194,12 +194,12 @@ class UniProtAcc(RegExAcc):
     shacc = re.compile(r'^(.*)-\d+$')
     @staticmethod
     def prefer(pr1,pr2):
-	return UniProtIsoformAcc.prefer(pr1,pr2)
+        return UniProtIsoformAcc.prefer(pr1,pr2)
     def shortacc(self,acc):
-	m = UniProtAcc.shacc.search(acc)
-	if m:
-	    return m.group(1)
-	return None
+        m = UniProtAcc.shacc.search(acc)
+        if m:
+            return m.group(1)
+        return None
 
 class UniProtID(RegExAcc):
     name = 'UniProtID'
@@ -215,7 +215,7 @@ class UniProtID(RegExAcc):
     orggrp = 1
     @staticmethod
     def prefer(pr1,pr2):
-	return UniProtIsoformAcc.prefer(pr1,pr2)
+        return UniProtIsoformAcc.prefer(pr1,pr2)
 
 class UniProtIsoformAcc(RegExAcc):
     name = 'UniProtIsoform'
@@ -235,74 +235,74 @@ class UniProtIsoformAcc(RegExAcc):
     orggrp = 1
     shacc = re.compile(r'^(.*)-\d+$')
     def shortacc(self,acc):
-	m = UniProtIsoformAcc.shacc.search(acc)
-	if m:
-	    return m.group(1)
-	return None
+        m = UniProtIsoformAcc.shacc.search(acc)
+        if m:
+            return m.group(1)
+        return None
     @staticmethod
     def prefer(pr1,pr2):
-	pr1id,pr1defline = pr1
-	pr2id,pr2defline = pr2
-	if pr1defline == pr2defline:
-	    return cmp(pr1id,pr2id)
-	# print pr1,pr2,
-	m1 = UniProtIsoformAcc.accrex.search(pr1defline.lstrip('>'))
-	m2 = UniProtIsoformAcc.accrex.search(pr2defline.lstrip('>'))
-	if not m1:
-	    pr1db = ""; pr1acc = ""; pr1iso = ""
-	else:
-	    pr1db = m1.group(1); pr1acc = m1.group(2); pr1iso = m1.group(3)
-	if not m2:
-	    pr2db = ""; pr2acc = ""; pr2iso = ""
-	else:
-	    pr2db = m2.group(1); pr2acc = m2.group(2); pr2iso = m2.group(3)
-	if pr1db != pr2db:
-	    # print "db",-1 if pr1db == 'sp' else 1
-	    return -1 if pr1db == 'sp' else 1
-	if pr1db == pr2db and pr1acc == pr2acc:
-	    if pr1iso == "":
-	        # print "iso",-1
-		return -1
-	    elif pr2iso == "":
-	        # print "iso",1
-		return 1
-	pe1 = UniProtIsoformAcc.pe.search(pr1defline)
-	pe2 = UniProtIsoformAcc.pe.search(pr2defline)
-	pe1 = (int(pe1.group(1)) if pe1 else 1e+20)
-	pe2 = (int(pe2.group(1)) if pe2 else 1e+20)
-	if pe1 != pe2:
-	    # print "pe",cmp(pe1,pe2)
-	    return cmp(pe1,pe2)
-	gn1 = UniProtIsoformAcc.gn.search(pr1defline)
-	gn2 = UniProtIsoformAcc.gn.search(pr2defline)
-	if gn1 and not gn2:
-	    # print "gn",-1
-	    return -1
-	if not gn1 and gn2:
-	    # print "gn",1
-	    return 1
+        pr1id,pr1defline = pr1
+        pr2id,pr2defline = pr2
+        if pr1defline == pr2defline:
+            return cmp(pr1id,pr2id)
+        # print pr1,pr2,
+        m1 = UniProtIsoformAcc.accrex.search(pr1defline.lstrip('>'))
+        m2 = UniProtIsoformAcc.accrex.search(pr2defline.lstrip('>'))
+        if not m1:
+            pr1db = ""; pr1acc = ""; pr1iso = ""
+        else:
+            pr1db = m1.group(1); pr1acc = m1.group(2); pr1iso = m1.group(3)
+        if not m2:
+            pr2db = ""; pr2acc = ""; pr2iso = ""
+        else:
+            pr2db = m2.group(1); pr2acc = m2.group(2); pr2iso = m2.group(3)
+        if pr1db != pr2db:
+            # print "db",-1 if pr1db == 'sp' else 1
+            return -1 if pr1db == 'sp' else 1
+        if pr1db == pr2db and pr1acc == pr2acc:
+            if pr1iso == "":
+                # print "iso",-1
+                return -1
+            elif pr2iso == "":
+                # print "iso",1
+                return 1
+        pe1 = UniProtIsoformAcc.pe.search(pr1defline)
+        pe2 = UniProtIsoformAcc.pe.search(pr2defline)
+        pe1 = (int(pe1.group(1)) if pe1 else 1e+20)
+        pe2 = (int(pe2.group(1)) if pe2 else 1e+20)
+        if pe1 != pe2:
+            # print "pe",cmp(pe1,pe2)
+            return cmp(pe1,pe2)
+        gn1 = UniProtIsoformAcc.gn.search(pr1defline)
+        gn2 = UniProtIsoformAcc.gn.search(pr2defline)
+        if gn1 and not gn2:
+            # print "gn",-1
+            return -1
+        if not gn1 and gn2:
+            # print "gn",1
+            return 1
         pr1defline = pr1defline.lower()
         pr2defline = pr2defline.lower()
-	if 'isoform' not in pr1defline and 'isoform' in pr2defline:
-	    # print "isoform",-1
-	    return -1
-	if 'fragment' not in pr1defline and 'fragment' in pr2defline:
-	    # print "isoform",-1
-	    return -1
-	if 'isoform' in pr1defline and 'isoform' not in pr2defline:
-	    # print "isoform",1
-	    return 1
-	if 'fragment' in pr1defline and 'fragment' not in pr2defline:
-	    # print "isoform",1
-	    return 1
+        if 'isoform' not in pr1defline and 'isoform' in pr2defline:
+            # print "isoform",-1
+            return -1
+        if 'fragment' not in pr1defline and 'fragment' in pr2defline:
+            # print "isoform",-1
+            return -1
+        if 'isoform' in pr1defline and 'isoform' not in pr2defline:
+            # print "isoform",1
+            return 1
+        if 'fragment' in pr1defline and 'fragment' not in pr2defline:
+            # print "isoform",1
+            return 1
         # print "id",cmp(pr1id,pr2id)
-	if pr1acc != pr2acc:
-	    if pr1acc and not pr2acc:
-		return -1
-	    if pr2acc and not pr1acc:
-		return 1
-	    return cmp(pr1acc,pr2acc)
-	return cmp(pr1id,pr2id)
+        if pr1acc != pr2acc:
+            if pr1acc and not pr2acc:
+                return -1
+            if pr2acc and not pr1acc:
+                return 1
+            return cmp(pr1acc,pr2acc)
+        return cmp(pr1id,pr2id)
 
 class BroadArtifact(RegExAcc):
     name = 'BroadArtifact'
@@ -336,39 +336,39 @@ class RefSeqAcc(RegExAcc):
     genegrp = 1
     shacc = re.compile(r'^(.*)\.\d+$')
     def shortacc(self,acc):
-	m = RefSeqAcc.shacc.search(acc)
-	if m:
-	    return m.group(1)
-	return None
+        m = RefSeqAcc.shacc.search(acc)
+        if m:
+            return m.group(1)
+        return None
     @staticmethod
     def prefer(pr1,pr2):
-	pr1id,pr1defline = pr1
-	pr2id,pr2defline = pr2
-	if pr1defline == pr2defline:
-	    return cmp(pr1id,pr2id)
-	# print pr1,pr2,
-	m1 = RefSeqAcc.accrex.search(pr1defline.lstrip('>'))
-	m2 = RefSeqAcc.accrex.search(pr2defline.lstrip('>'))
-	if not m1:
-	    pr1acc = "";
-	else:
-	    pr1acc = m1.group(RefSeqAcc.accgrp);
-	    pr1db = pr1acc[:2]
-	if not m2:
-	    pr2acc = "";
-	else:
-	    pr2acc = m2.group(RefSeqAcc.accgrp);
-	    pr2db = pr2acc[:2]
-	if pr1acc == "" or pr2acc == "":
-	    if pr1acc != pr2acc:
-		return cmp(1*(pr1acc == ""),1*(pr2acc == ""))
-	    return cmp(db1id,db2id)
-	if pr1db != pr2db:
-	    return cmp(1*(pr1db!='NP'),1*(pr2db!='NP'))
-	for badword in "predicted hypothetical isoform uncharacterized putative".split():
-	    c = cmp(1*(re.search(r'\b%s\b',pr1defline,re.I)!=None),1*(re.search(r'\b%s\b',pr2defline,re.I)!=None))
-	    if c != 0:
-		return c
+        pr1id,pr1defline = pr1
+        pr2id,pr2defline = pr2
+        if pr1defline == pr2defline:
+            return cmp(pr1id,pr2id)
+        # print pr1,pr2,
+        m1 = RefSeqAcc.accrex.search(pr1defline.lstrip('>'))
+        m2 = RefSeqAcc.accrex.search(pr2defline.lstrip('>'))
+        if not m1:
+            pr1acc = "";
+        else:
+            pr1acc = m1.group(RefSeqAcc.accgrp);
+            pr1db = pr1acc[:2]
+        if not m2:
+            pr2acc = "";
+        else:
+            pr2acc = m2.group(RefSeqAcc.accgrp);
+            pr2db = pr2acc[:2]
+        if pr1acc == "" or pr2acc == "":
+            if pr1acc != pr2acc:
+                return cmp(1*(pr1acc == ""),1*(pr2acc == ""))
+            return cmp(db1id,db2id)
+        if pr1db != pr2db:
+            return cmp(1*(pr1db!='NP'),1*(pr2db!='NP'))
+        for badword in "predicted hypothetical isoform uncharacterized putative".split():
+            c = cmp(1*(re.search(r'\b%s\b',pr1defline,re.I)!=None),1*(re.search(r'\b%s\b',pr2defline,re.I)!=None))
+            if c != 0:
+                return c
         return cmp(pr1id,pr2id)
 
 class RefSeqGI(RegExAcc):
@@ -392,68 +392,68 @@ class SGDAcc(RegExAcc):
     urltmpl = 'http://www.yeastgenome.org/cgi-bin/locus.fpl?locus=%(acc)s'
 
 class UCSCKGAcc(FirstWord):
-    noauto = True    
+    noauto = True
     name = 'UCSCKGAcc'
 
 class Gene(FirstWord):
-    noauto = True    
+    noauto = True
     name = 'Gene'
 
 class OrthoGene(FirstWord):
-    noauto = True    
+    noauto = True
     name = 'OrthoGene'
     shacc = re.compile(r'^(.*)\(\d+\)$')
     def shortacc(self,acc):
-	m = OrthoGene.shacc.search(acc)
-	if not m:
-	    return None
-	return m.group(1)
+        m = OrthoGene.shacc.search(acc)
+        if not m:
+            return None
+        return m.group(1)
     @staticmethod
     def prefer(pr1,pr2):
-	c = cmp(('|' in pr1[1])*1,('|' in pr2[1])*1)
-	if c != 0:
-	    return -c
+        c = cmp(('|' in pr1[1])*1,('|' in pr2[1])*1)
+        if c != 0:
+            return -c
         return Gene.prefer(pr1,pr2)
 
 class MultiAcc(RegExAcc):
     classes = []
 
     def __init__(self):
-        self.rules = map(lambda c: c(),self.classes)
-	self.acc2rule = dict()
+        self.rules = [c() for c in self.classes]
+        self.acc2rule = dict()
 
     def __call__(self,description):
         for r in self.rules:
             acc,desc = r(description)
             if acc:
-		if acc not in self.acc2rule:
-		    self.acc2rule[acc] = r
+                if acc not in self.acc2rule:
+                    self.acc2rule[acc] = r
                 return acc,desc
         return None,None
 
     def getacc(self,description):
-	for r in self.rules:                                                                                     
+        for r in self.rules:
             acc,desc = r(description)
-	    if acc:
-		assert acc in self.acc2rule
-		assert self.acc2rule[acc] == r
-		return acc
-	raise RuntimeError('Can\'t get accession')
+            if acc:
+                assert acc in self.acc2rule
+                assert self.acc2rule[acc] == r
+                return acc
+        raise RuntimeError('Can\'t get accession')
 
     def org(self,description):
-	acc = self.getacc(description)
+        acc = self.getacc(description)
         return self.acc2rule[acc].org(description)
 
     def gene(self,description):
-	acc = self.getacc(description)
+        acc = self.getacc(description)
         return self.acc2rule[acc].gene(description)
 
     def entry(self,description):
-	acc = self.getacc(description)
+        acc = self.getacc(description)
         return self.acc2rule[acc].entry(description)
 
     def url(self,description):
-	acc = self.getacc(description)
+        acc = self.getacc(description)
         return self.acc2rule[acc].url(description)
 
     def shortacc(self,acc):
@@ -489,138 +489,138 @@ class RefSeqUniProtIsoformBroadArtifact(MultiAcc):
 
 class UniProtIsoformDecoy(MultiAcc):
     name = 'UniProtIsoform+Decoy'
-    classes = [ UniProtIsoformAcc, FirstWord ]    
+    classes = [ UniProtIsoformAcc, FirstWord ]
 
 class OrthoRefSeqUniProtIsoform(RefSeqUniProtIsoform):
-    noauto = True    
+    noauto = True
     name = 'OrthoRefSeqUniProtIsoform'
     def prefer(self,pr1,pr2):
-	c = cmp(('; gi|' in pr1[1])*1,('; gi|' in pr2[1])*1)
-	if c != 0:
-	    return -c
+        c = cmp(('; gi|' in pr1[1])*1,('; gi|' in pr2[1])*1)
+        if c != 0:
+            return -c
         return RefSeqUniProtIsoform.prefer(self,pr1,pr2)
 
 class OrthoRefSeqUniProtIsoformBroadArtifact(RefSeqUniProtIsoformBroadArtifact):
-    noauto = True    
+    noauto = True
     name = 'OrthoRefSeqUniProtIsoformBroadArtifact'
     def prefer(self,pr1,pr2):
-	c = cmp(('; gi|' in pr1[1])*1,('; gi|' in pr2[1])*1)
-	if c != 0:
-	    return -c
+        c = cmp(('; gi|' in pr1[1])*1,('; gi|' in pr2[1])*1)
+        if c != 0:
+            return -c
         return RefSeqUniProtIsoformBroadArtifact.prefer(self,pr1,pr2)
 
 AccessionRuleClasses = [ FirstWord,
                          IPIShortAcc, UniProtIsoformAcc, RefSeqAcc, SGDAcc,
-		 	 UniProtAcc, UniProtID, RefSeqGI, 
+                         UniProtAcc, UniProtID, RefSeqGI,
                          IPIGene, UniProtGene,
                          UCSCKGAcc, Gene, OrthoGene,
                          UniProtIsoformRefSeq,
                          UniProtRefSeq,
                          RefSeqUniProt,
                          RefSeqUniProtIsoform,
-			 RefSeqUniProtIsoformBroadArtifact,
-			 OrthoRefSeqUniProtIsoform,
-			 OrthoRefSeqUniProtIsoformBroadArtifact,
-			 SecondAccFirstWord,
+                         RefSeqUniProtIsoformBroadArtifact,
+                         OrthoRefSeqUniProtIsoform,
+                         OrthoRefSeqUniProtIsoformBroadArtifact,
+                         SecondAccFirstWord,
                          UniProtIsoformDecoy,
                          ]
 
-AccessionRules = map(lambda c: c.name, AccessionRuleClasses)
+AccessionRules = [c.name for c in AccessionRuleClasses]
 
 from collections import defaultdict
 from operator import itemgetter
 
 class PeptideRemapper:
-   
+
     # ptmdiffs = [ 0.0, -1.0, 1.0, -14.0, -16.0, -28.0, -32.0, -42.0 ]
 
     def __init__(self,peptides,seqdb,accfn=FirstWord(),verbose=False,blocksize=None,preprocess=False,translation=None,aasubst=0,dnamut=0):
         self.accfn = accfn
         self.seqdb = seqdb
-	self.verbose = verbose
-	self.blocksize = blocksize
-	self.preprocess = preprocess
-	self.peptides = peptides
-	self.dnamut = dnamut
-	self.aasubst = aasubst
-	self.protdb = ProteinDatabase()
-	self.trans = translation
-	if self.trans:
-	    self.trans = str(self.trans)
-	    assert self.trans in 'FA'
+        self.verbose = verbose
+        self.blocksize = blocksize
+        self.preprocess = preprocess
+        self.peptides = peptides
+        self.dnamut = dnamut
+        self.aasubst = aasubst
+        self.protdb = ProteinDatabase()
+        self.trans = translation
+        if self.trans:
+            self.trans = str(self.trans)
+            assert self.trans in 'FA'
         self.domap()
-        
+
     def domap(self):
-        from Options import Options
-	from Run import PeptideScanCommandLine
+        from .Options import Options
+        from .Run import PeptideScanCommandLine
         opt = Options()
         opt.set('i',self.seqdb)
         opt.set('C',5)
-	if self.verbose:
-	    opt.set('v')
-	if self.trans:
-	    opt.set('T',self.trans)
-	if self.dnamut:
-	    opt.set('K',self.dnamut)
-	    opt.set('x',3)
-	if self.aasubst:
-	    opt.set('K',self.aasubst*3)
-	    opt.set('x',3)
+        if self.verbose:
+            opt.set('v')
+        if self.trans:
+            opt.set('T',self.trans)
+        if self.dnamut:
+            opt.set('K',self.dnamut)
+            opt.set('x',3)
+        if self.aasubst:
+            opt.set('K',self.aasubst*3)
+            opt.set('x',3)
         pscmd = PeptideScanCommandLine(opt)
-	kwargs = {'preprocess': self.preprocess}
-        
-	peptides = OutOfCoreDistinct(self.peptides)
+        kwargs = {'preprocess': self.preprocess}
+
+        peptides = OutOfCoreDistinct(self.peptides)
         # print '\n'.join(map(repr,peptides))
-	self.protdb.load_peptides(peptides)
-	npep = self.protdb.peptide_count()
-	if not self.blocksize:
-	    self.blocksize = max(npep,1)
-	    kwargs['blocksize'] = self.blocksize
-	hit_headers = ('pracc','prdesc','pepid','start','end','leftaa','rightaa','deltamass','substitutions','prdefline')
-	obssubs = defaultdict(int)
-	def hit_generator():
-	 for offset in range(0,npep,self.blocksize):
-	   pepidmap = dict((p,i) for i,p in self.protdb.get_peptides(count=self.blocksize,offset=offset))
-	   # print '\n'.join(pepidmap.keys()[:20])
-           for r in pscmd.run(pepidmap.keys(),**kwargs):
-	     # print >>sys.stderr, r
-             pracc,prdesc = self.accfn(r.seqdescr)
-	     if not pracc:
-		continue
-	     if len(r.substitutions) > 1:
-		continue
-             pep = r.peptide
-	     if not self.trans:
-               start = r.start
-               end = r.end
-	     else:
-	       if r.nucdir == 'F':
-	         start = r.nucstart
-	         end = r.nucend
-	       else:
-		 start = r.nucend
-		 end = r.nucstart
-             leftaa = r.leftaa
-             rightaa = r.rightaa
-	     deltamass = r.deltamass
-	     if len(r.substitutions) > 0:
-	         sub = r.substitutions[0]
-		 subs = "%s%d->%s(%d)"%(sub.to,sub.pos,sub.frm,sub.mut)
-		 obssubs[(sub.to,sub.frm,int(round(deltamass)))] += 1
-	     else:
-		 subs = ""
-	     yield dict(zip(hit_headers,(pracc,prdesc,pepidmap[pep],start,end,leftaa,rightaa,deltamass,subs,r.seqdescr)))
-	oochits = OutOfCoreTable(rows=hit_generator(),headers=hit_headers)
-	# print >>sys.stderr, '\n'.join(map(lambda t: "%s->%s (%+d): %d"%(t[0][0],t[0][1],t[0][2],t[1]), sorted(obssubs.items(),key=itemgetter(1))))
-	praccs = OutOfCoreDistinct(itertools.imap(lambda r: (r.get('pracc'),),oochits))
-        self.protdb.load_proteins(itertools.imap(itemgetter(0),praccs))
+        self.protdb.load_peptides(peptides)
+        npep = self.protdb.peptide_count()
+        if not self.blocksize:
+            self.blocksize = max(npep,1)
+            kwargs['blocksize'] = self.blocksize
+        hit_headers = ('pracc','prdesc','pepid','start','end','leftaa','rightaa','deltamass','substitutions','prdefline')
+        obssubs = defaultdict(int)
+        def hit_generator():
+            for offset in range(0,npep,self.blocksize):
+                pepidmap = dict((p,i) for i,p in self.protdb.get_peptides(count=self.blocksize,offset=offset))
+                # print '\n'.join(pepidmap.keys()[:20])
+                for r in pscmd.run(list(pepidmap.keys()),**kwargs):
+                    # print >>sys.stderr, r
+                    pracc,prdesc = self.accfn(r.seqdescr)
+                    if not pracc:
+                        continue
+                    if len(r.substitutions) > 1:
+                        continue
+                    pep = r.peptide
+                    if not self.trans:
+                        start = r.start
+                        end = r.end
+                    else:
+                        if r.nucdir == 'F':
+                            start = r.nucstart
+                            end = r.nucend
+                        else:
+                            start = r.nucend
+                            end = r.nucstart
+                    leftaa = r.leftaa
+                    rightaa = r.rightaa
+                    deltamass = r.deltamass
+                    if len(r.substitutions) > 0:
+                        sub = r.substitutions[0]
+                        subs = "%s%d->%s(%d)"%(sub.to,sub.pos,sub.frm,sub.mut)
+                        obssubs[(sub.to,sub.frm,int(round(deltamass)))] += 1
+                    else:
+                        subs = ""
+                    yield dict(list(zip(hit_headers,(pracc,prdesc,pepidmap[pep],start,end,leftaa,rightaa,deltamass,subs,r.seqdescr))))
+        oochits = OutOfCoreTable(rows=hit_generator(),headers=hit_headers)
+        # print >>sys.stderr, '\n'.join(map(lambda t: "%s->%s (%+d): %d"%(t[0][0],t[0][1],t[0][2],t[1]), sorted(obssubs.items(),key=itemgetter(1))))
+        praccs = OutOfCoreDistinct(map(lambda r: (r.get('pracc'),),oochits))
+        self.protdb.load_proteins(map(itemgetter(0),praccs))
         proidmap = self.protdb.protein_idmap()
-        
-        hititer = itertools.imap(lambda r: (proidmap[r['pracc']],r['pepid'],r['start'],
+
+        hititer = map(lambda r: (proidmap[r['pracc']],r['pepid'],r['start'],
                                             r['end'],r['leftaa'],r['rightaa'],r['deltamass'],r['substitutions']), oochits)
         self.protdb.load_hits(hititer)
 
-	prots = OutOfCoreDistinct(itertools.imap(lambda r: (r.get('pracc'),r.get('prdesc'),r.get('prdefline')),oochits))
+        prots = OutOfCoreDistinct(map(lambda r: (r.get('pracc'),r.get('prdesc'),r.get('prdefline')),oochits))
         lastacc = None
         for r in prots:
             if r[0] == lastacc:
@@ -741,8 +741,7 @@ EDKPVTGPR
 EDLCNHSGK
 EDPVPNGLR
 EDSNSTESK
-EDTVVATLR   
+EDTVVATLR
 """.split()
 
     r = PeptideRemapper(peptides, sys.argv[1], verbose=True, blocksize=50)
-    

@@ -64,13 +64,13 @@ class StringIndex:
     def has(self,s):
         return (self.id(s) != None)
     def get(self,s):
-	try:
+        try:
             cursor = self.conn.cursor()
             cursor.execute(self._insert,(str(s),0))
             id = cursor.lastrowid
         except sqlite3.IntegrityError:
             id = self.id(s)
-	return id
+        return id
     def add(self,s):
         try:
             cursor = self.conn.cursor()
@@ -153,7 +153,7 @@ class BipartiteStringIndex:
         conn.execute(self._index1)
         conn.execute(self._index2)
         self.conn = conn
-        
+
     def add(self,u,v):
         aid = self.a.index(u)
         bid = self.b.index(v)
@@ -167,6 +167,3 @@ class BipartiteStringIndex:
 
     def into(self,v):
         return set(r[0] for r in self.conn.execute(self._into,v))
-        
-        
-       

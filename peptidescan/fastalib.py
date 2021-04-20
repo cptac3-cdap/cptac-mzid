@@ -33,7 +33,7 @@ class fastalib_writer:
 
 class fasta_entry(fastalib_writer):
     def write(self,ofh,d,s):
-        print >> ofh, '>%s\n%s' % (d,s)
+        print('>%s\n%s' % (d,s), file=ofh)
 
 def open_read(fname):
     bits = fname.split('.')
@@ -72,7 +72,7 @@ class fasta:
             self.output = sys.stdout
         else:
             self.output = open_write(output_file_name)
-        
+
         self.filter = all()
         self.writer = fasta_entry()
 
@@ -83,9 +83,9 @@ class fasta:
         self.writer = w
 
     def __iter__(self):
-        return self.next()
+        return next(self)
 
-    def next(self):
+    def __next__(self):
         firsttime = True
         nextchunkseq = True
         try:
@@ -123,7 +123,7 @@ class fasta:
             buf = self.input.read(bufsize)
         if not firsttime and self.filter.keep(defline,sequence):
             yield (defline,sequence)
-        
+
     def process(self):
         firsttime = True
         nextchunkseq = True
@@ -170,5 +170,3 @@ class fasta:
             except IOError:
                 sys.exit(0)
         return self.writer.finish(self.output)
-                        
-                        

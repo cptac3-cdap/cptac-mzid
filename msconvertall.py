@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import sys, os, os.path, subprocess, shlex, glob, encodings
 from configfile import readconfig
@@ -8,9 +8,9 @@ cfg = readconfig(sys.argv[0])
 
 parser = OptionParser()
 parser.add_option('-r','--raw',type='string',default='RAW',dest='raw',
-		  help='RAW file extension to convert from. Default: RAW.')
+                  help='RAW file extension to convert from. Default: RAW.')
 parser.add_option('-v','--verbose',action='store_true',dest='verbose',
-		  help='Verbose output from msconvert.')
+                  help='Verbose output from msconvert.')
 opts,args = parser.parse_args()
 
 opts.raw = opts.raw.lower()
@@ -29,15 +29,15 @@ if opts.verbose:
 curdir = os.path.abspath(os.getcwd())
 for root, dirs, files in os.walk(curdir):
     for f in (files + dirs):
-	try:
+        try:
             b,e = f.rsplit('.',1)
-	except ValueError:
-	    continue
+        except ValueError:
+            continue
         if e.lower() != opts.raw:
-	    continue
+            continue
         if glob.glob(os.path.join(root,b+'*'+cfg.get(iniKey,"Extn"))):
-	    continue
-	# print [msconvert_prog,f]+msconvert_args
-	if os.path.isdir(os.path.join(root,f)):
-	    dirs.remove(f)
-	subprocess.call([msconvert_prog,f]+msconvert_args,cwd=root,shell=True) 
+            continue
+        # print [msconvert_prog,f]+msconvert_args
+        if os.path.isdir(os.path.join(root,f)):
+            dirs.remove(f)
+        subprocess.call([msconvert_prog,f]+msconvert_args,cwd=root,shell=True)

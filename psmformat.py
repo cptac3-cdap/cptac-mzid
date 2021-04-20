@@ -1,6 +1,6 @@
 
 import os, sys, os.path, re
-from itertools import imap
+
 from peptidescan.OutOfCoreTable import OutOfCoreSortedTable
 from peptidescan.PeptideRemapper import PeptideRemapper, UniProtIsoformAcc, RefSeqAcc, UCSCKGAcc, UniProtIsoformRefSeq, RefSeqUniProtIsoform
 from operator import itemgetter
@@ -35,7 +35,7 @@ class SequenceDatabase(object):
         if self._filename:
             return os.path.split(self._filename)[1]
         return None
-        
+
     def url(self):
         return None
 
@@ -66,7 +66,7 @@ class SequenceDatabase(object):
     def proteins(self,peptide):
         assert(self._pm)
         dbid = self.id()
-	for pracc,laa,start,end,raa,prdefline,prlen in map(itemgetter(0,2,3,4,5,6,9),self._pm.proteins(peptide)):
+        for pracc,laa,start,end,raa,prdefline,prlen in map(itemgetter(0,2,3,4,5,6,9),self._pm.proteins(peptide)):
             yield dbid,pracc,laa[-1],raa[0],start+1,end,prlen,prdefline
 
     def protein_defline(self,acc):
@@ -91,7 +91,7 @@ class SequenceDatabase(object):
 
     @staticmethod
     def seqdbs(seqdir,seqdbs):
-        from ConfigParser import ConfigParser
+        from configparser import ConfigParser
         seqdbconfig = ConfigParser()
         seqdbconfig.read(os.path.join(seqdir,'seqdb.ini'))
 
@@ -153,7 +153,7 @@ class UniProt(SequenceDatabase):
     def url(self):
         if not self.orgmap():
             return None
-	return "http://www.uniprot.org/uniprot/?query=taxonomy%%3a%(taxid)s+AND+keyword%%3a1185&force=yes&format=fasta&include=yes"%self.orgmap()
+        return "http://www.uniprot.org/uniprot/?query=taxonomy%%3a%(taxid)s+AND+keyword%%3a1185&force=yes&format=fasta&include=yes"%self.orgmap()
 
     def dbsource(self):
         return "DB source UniProt"
@@ -168,8 +168,8 @@ class PSMCache(object):
 
     def __init__(self,input,*extraheaders):
         headers = [ 'SpectrumFile', 'Location', 'SpectrumID',
-                    'SpectrumIDFormat', 'FileFormat', 'Scan', 
-                    'ExperimentalMassToCharge', 'Rank', 'Peptide', 
+                    'SpectrumIDFormat', 'FileFormat', 'Scan',
+                    'ExperimentalMassToCharge', 'Rank', 'Peptide',
                     'retention time', 'intensity of precursor ion',
                     'ChargeState', 'Modification', 'Protein' ]
         for eh in extraheaders:
@@ -178,7 +178,7 @@ class PSMCache(object):
                                       key=lambda r: (r['SpectrumFile'],r['Scan']))
 
     def peptides(self):
-        return imap(lambda r: r['Peptide'], self.t)
+        return map(lambda r: r['Peptide'], self.t)
 
     def psms(self):
         return self.t
@@ -195,88 +195,88 @@ class PSMFormater(object):
         md['Software'].append('textpsm2mzid (md5:d285443bf591b9cae6273209b1b7310b)')
         md['Software'].append('ProteoWizard r10834')
 
-        print "MDBEGIN"
-        for k,v in md.items():
+        print("MDBEGIN")
+        for k,v in list(md.items()):
             if k != "Software":
-                print k,v
+                print(k,v)
             else:
                 for v1 in md[k]:
-                    print k,v1
-        print "MDEND"
+                    print(k,v1)
+        print("MDEND")
 
     def write_prgrp_metadata(self,grpmd):
         grpmd['Threshold'] = 'no\\ threshold'
-        print "GRPMDBEGIN"
-        for k,v in grpmd.items():
+        print("GRPMDBEGIN")
+        for k,v in list(grpmd.items()):
             if k != "AnalysisParams":
-                print k,v
+                print(k,v)
             else:
                 for v1 in grpmd[k]:
-                    print k,v1
-        print "GRPMDEND"
+                    print(k,v1)
+        print("GRPMDEND")
 
     def write_seqdb(self,sdb):
-        print "SEQDBBEGIN"
-        print "ID",sdb.id()
-        print "Name",sdb.name()
+        print("SEQDBBEGIN")
+        print("ID",sdb.id())
+        print("Name",sdb.name())
         if sdb.organism():
-            print "Organism",sdb.organism()
+            print("Organism",sdb.organism())
         if sdb.version():
-            print "Release",sdb.version()
-	if sdb.url():
-	    print "URI",sdb.url()
-	if sdb.dbsource():
-            print "DBSource",sdb.dbsource()
-	if sdb.location():
-	    print "Location",sdb.location()
+            print("Release",sdb.version())
+        if sdb.url():
+            print("URI",sdb.url())
+        if sdb.dbsource():
+            print("DBSource",sdb.dbsource())
+        if sdb.location():
+            print("Location",sdb.location())
         if sdb.decoyPrefix():
-            print "DecoyPrefix",sdb.decoyPrefix()
-        print "SEQDBEND"
+            print("DecoyPrefix",sdb.decoyPrefix())
+        print("SEQDBEND")
 
     def write_psm(self,psm):
-        print "PSMBEGIN"
+        print("PSMBEGIN")
         for key in "SpectrumFile Location FileFormat SpectrumID SpectrumIDFormat Scan Rank ChargeState ExperimentalMassToCharge Peptide".split():
             if psm.get(key) not in (None,""):
-                print key,psm[key]
+                print(key,psm[key])
         for m in psm['Modification']:
-            print "Modification"," ".join(map(str,m))
+            print("Modification"," ".join(map(str,m)))
         for key in self.scores:
             if psm.get(key) not in (None,""):
                 value = psm[key]
                 key1 = re.sub(' ','\\ ',key)
-                print "Score",key1,value
+                print("Score",key1,value)
         for key in self.params:
             if psm.get(key) not in (None,""):
                 key1 = re.sub(' ','\\ ',key)
-                print "Param",key1,psm[key]
+                print("Param",key1,psm[key])
         for key in self.specparams:
             if psm.get(key) not in (None,""):
                 key1 = re.sub(' ','\\ ',key)
-                if isinstance(psm[key],basestring):
-                    print "SpecParam",key1,psm[key]
+                if isinstance(psm[key],str):
+                    print("SpecParam",key1,psm[key])
                 else:
                     units = re.sub(' ','\\ ',psm[key][1])
-                    print "SpecParam",key1,psm[key][0],units
+                    print("SpecParam",key1,psm[key][0],units)
 
         for pr in psm['Protein']:
-            print "Protein",pr[0]+":"+pr[1]," ".join(map(str,pr[2:]))
+            print("Protein",pr[0]+":"+pr[1]," ".join(map(str,pr[2:])))
 
-        print "PSMEND"
-        
+        print("PSMEND")
+
     def write_prgrp(self,index,npep,proteins):
-        print "PRGRPBEGIN"
-        print "Name Group%d"%(index,)
-        print "Param - distinct\\ peptide\\ sequences",npep
+        print("PRGRPBEGIN")
+        print("Name Group%d"%(index,))
+        print("Param - distinct\\ peptide\\ sequences",npep)
         for pr in proteins:
-            prstr = pr['id'] 
-            print "Protein",prstr
+            prstr = pr['id']
+            print("Protein",prstr)
             if pr.get('anchor'):
-                print "Param",prstr,"anchor\\ protein"
+                print("Param",prstr,"anchor\\ protein")
             if pr.get('sameset'):
-                print "Param",prstr,"sequence\\ same-set\\ protein",pr['sameset']
+                print("Param",prstr,"sequence\\ same-set\\ protein",pr['sameset'])
             if pr.get('subset'):
-                print "Param",prstr,"sequence\\ sub-set\\ protein",pr['subset']
-            print "Param",prstr,"distinct\\ peptide\\ sequences",pr['peptides']
+                print("Param",prstr,"sequence\\ sub-set\\ protein",pr['subset'])
+            print("Param",prstr,"distinct\\ peptide\\ sequences",pr['peptides'])
             if pr.get('coverage'):
-                print "Param",prstr,"sequence\\ coverage",round(pr['coverage'],2),"percent"
-        print "PRGRPEND"
+                print("Param",prstr,"sequence\\ coverage",round(pr['coverage'],2),"percent")
+        print("PRGRPEND")

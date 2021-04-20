@@ -1,7 +1,7 @@
 
 import sys, os, os.path, sqlite3, tempfile, itertools
 from operator import itemgetter
-from cPickle import dumps, loads
+from pickle import dumps, loads
 
 class ProteinDatabase:
     prtable = """
@@ -120,12 +120,12 @@ class ProteinDatabase:
       hit.peptide_id = peptide.id
     order by hit.end, hit.start
     """
-    indices = filter(None,map(str.strip,"""
+    indices = [_f for _f in map(str.strip,"""
     create %s index index1 on protein (accession,dbindex);
     create %s index index2 on peptide (peptide);
     create %s index index3 on hit (peptide_id,protein_id,start,end);
     create index index4 on hit (protein_id);
-    """.split('\n')))
+    """.split('\n')) if _f]
     def __init__(self,filename=None,flag='r'):
         self.delfilename = None
         if not filename:
@@ -136,10 +136,10 @@ class ProteinDatabase:
             filename=fn
         assert(filename)
         if 'n' in flag:
-	    try:
-	        os.unlink(filename)
-	    except:
-	        pass
+            try:
+                os.unlink(filename)
+            except:
+                pass
         self.db = sqlite3.connect(filename,
                                   isolation_level='EXCLUSIVE')
         self.db.text_factory = str
@@ -148,10 +148,10 @@ class ProteinDatabase:
             cur.execute(self.prtable)
             cur.execute(self.peptable)
             cur.execute(self.hittable)
-	    self.db.commit()
-	    self.create_protein_indices(True)
-	    self.create_peptide_indices(True)
-	    self.create_hit_indices(True)
+            self.db.commit()
+            self.create_protein_indices(True)
+            self.create_peptide_indices(True)
+            self.create_hit_indices(True)
     def __del__(self):
         if self.delfilename:
             try:
@@ -159,30 +159,30 @@ class ProteinDatabase:
             except OSError:
                 pass
     def drop_protein_indices(self):
-	self.db.execute('drop index if exists index1;')
-	self.db.commit()
+        self.db.execute('drop index if exists index1;')
+        self.db.commit()
     def create_protein_indices(self,unique=False):
-	self.db.execute(self.indices[0]%("unique" if unique else ""))
-	self.db.commit()
+        self.db.execute(self.indices[0]%("unique" if unique else ""))
+        self.db.commit()
     def drop_peptide_indices(self):
-	self.db.execute('drop index if exists index2;')
-	self.db.commit()
+        self.db.execute('drop index if exists index2;')
+        self.db.commit()
     def create_peptide_indices(self,unique=False):
-	self.db.execute(self.indices[1]%("unique" if unique else ""))
-	self.db.commit()
+        self.db.execute(self.indices[1]%("unique" if unique else ""))
+        self.db.commit()
     def drop_hit_indices(self):
-	self.db.execute('drop index if exists index3;')
-	self.db.execute('drop index if exists index4;')
-	self.db.commit()
+        self.db.execute('drop index if exists index3;')
+        self.db.execute('drop index if exists index4;')
+        self.db.commit()
     def create_hit_indices(self,unique=False):
-	self.db.execute(self.indices[2]%("unique" if unique else ""))
-	self.db.commit()
-	self.db.execute(self.indices[3])
-	self.db.commit()
+        self.db.execute(self.indices[2]%("unique" if unique else ""))
+        self.db.commit()
+        self.db.execute(self.indices[3])
+        self.db.commit()
     def load_peptides(self,peptides):
         self.drop_peptide_indices()
         cur = self.db.cursor()
-	cur.executemany(self.inspep,itertools.imap(lambda p: (p,),peptides))
+        cur.executemany(self.inspep,map(lambda p: (p,),peptides))
         self.db.commit()
         self.create_peptide_indices(True)
     def clean_peptides(self):
@@ -199,7 +199,7 @@ class ProteinDatabase:
     def load_proteins(self,accessions,dbind=0):
         self.drop_protein_indices()
         cur = self.db.cursor()
-	cur.executemany(self.insprot,map(lambda a: (a,dbind),accessions))
+        cur.executemany(self.insprot,[(a,dbind) for a in accessions])
         self.db.commit()
         self.create_protein_indices(True)
     def clean_proteins(self):
@@ -213,12 +213,12 @@ class ProteinDatabase:
         """)
         self.db.commit()
     def load_hits(self,hits,dbind=0):
-	# peps = dict((p,self.get_peptide_id(p)) for p in sorted(set(map(itemgetter(0),hits))))
-	# pros = dict((a,self.get_protein_id(a,dbind)) for a in sorted(set(map(itemgetter(1),hits))))
-	# hits = ((pros.get(h[1]),h[0],h[2],h[3],h[4],h[5]) for h in hits)
+        # peps = dict((p,self.get_peptide_id(p)) for p in sorted(set(map(itemgetter(0),hits))))
+        # pros = dict((a,self.get_protein_id(a,dbind)) for a in sorted(set(map(itemgetter(1),hits))))
+        # hits = ((pros.get(h[1]),h[0],h[2],h[3],h[4],h[5]) for h in hits)
         self.drop_hit_indices()
-	cur = self.db.cursor()
-	cur.executemany(self.inshit,hits)
+        cur = self.db.cursor()
+        cur.executemany(self.inshit,hits)
         self.db.commit()
         self.create_hit_indices(False)
     def clean_hits(self):
@@ -274,7 +274,7 @@ class ProteinDatabase:
             q = cur.execute(self.getpro1,(dbind,offset,count))
         return q
     def protein_idmap(self):
-	return dict(itertools.imap(itemgetter(1,0),self.get_proteins()))
+        return dict(map(itemgetter(1,0),self.get_proteins()))
     def get_protein_id(self,accession,dbind=0):
         cur = self.db.cursor()
         for r in cur.execute(self.getpro,(dbind,accession)):
@@ -324,7 +324,7 @@ class ProteinDatabase:
         pepid = self.get_peptide_id(pepseq)
         cur = self.db.cursor()
         if dbind != None:
-            return filter(lambda r: r[0] == dbind,cur.execute(self.gethits,(pepid,)))
+            return [r for r in cur.execute(self.gethits,(pepid,)) if r[0] == dbind]
         return cur.execute(self.gethits,(pepid,))
 
     def has_hit(self,protid,pepseq):
@@ -341,18 +341,18 @@ class ProteinDatabase:
     def get_protein_hits(self,protid):
         cur = self.db.cursor()
         q = cur.execute(self.getprothits,(protid,))
-        return map(lambda r: Hit(*r),q)
-            
+        return [Hit(*r) for r in q]
+
     def get_protein_hits_by_start(self,protid):
         cur = self.db.cursor()
         q = cur.execute(self.getprothits1,(protid,))
-        return map(lambda r: Hit(*r),q)
-            
+        return [Hit(*r) for r in q]
+
     def get_protein_hits_by_end(self,protid):
         cur = self.db.cursor()
         q = cur.execute(self.getprothits2,(protid,))
-        return map(lambda r: Hit(*r),q)
-            
+        return [Hit(*r) for r in q]
+
     def commit(self):
         self.db.commit()
 
@@ -363,13 +363,13 @@ class ProteinDatabase:
         return None
 
     def __iter__(self):
-        return self.next()
-    
-    def next(self):
+        return next(self)
+
+    def __next__(self):
         cur = self.db.cursor()
         for r in cur.execute(self.getpro4):
             yield Protein(self,r[0])
-            
+
 import re
 
 class Protein:
@@ -377,37 +377,37 @@ class Protein:
         self.pdb = pdb
         self.id = id
         dbind,self.accession,d = pdb.get_protein_data(id)
-        for k,v in d.iteritems():
+        for k,v in d.items():
             setattr(self,k,v)
 
     @staticmethod
     def getAcc(defline,accfn=None,accre=None,accgrp=None):
-	defline = defline.strip()
-	if defline.startswith('>'):
-	    defline = defline[1:]
-	if accfn != None:
-	    return accfn(defline)
-	if accre != None:
-	    if accgrp == None:
-		accgrp = 1
-	    m = re.search(accre,defline)
+        defline = defline.strip()
+        if defline.startswith('>'):
+            defline = defline[1:]
+        if accfn != None:
+            return accfn(defline)
+        if accre != None:
+            if accgrp == None:
+                accgrp = 1
+            m = re.search(accre,defline)
             assert(m != None)
-	    return m.group(accgrp)
-	try:
-	    acc,desc = defline.split(None,1)
+            return m.group(accgrp)
+        try:
+            acc,desc = defline.split(None,1)
         except:
-	    acc = defline
-	return acc
-	
+            acc = defline
+        return acc
+
     @staticmethod
     def fromFasta(defline,sequence,pdb,**kw):
-	if defline.startswith('>'):
-	    defline = defline[1:]
-	acc = Protein.getAcc(defline,**kw)
-	try:
-	    dummy,desc = defline.split(None,1)
-	except:
-	    desc = ''
+        if defline.startswith('>'):
+            defline = defline[1:]
+        acc = Protein.getAcc(defline,**kw)
+        try:
+            dummy,desc = defline.split(None,1)
+        except:
+            desc = ''
         if not pdb.has_protein(acc):
             pdb.add_protein(acc)
             id = pdb.get_protein_id(acc)
@@ -426,18 +426,18 @@ class Protein:
         return Protein(pdb,id)
 
     def findPep(self,pep):
-	assert(self.seq != None)
-	p = self.seq.find(pep)
-	if p < 0:
-	    return
-	try:
-	    laa = self.seq[p-1]
-	except IndexError:
-	    laa = '-'
-	try:
-	    raa = self.seq[p+len(pep)]
-	except IndexError:
-	    raa = '-'
+        assert(self.seq != None)
+        p = self.seq.find(pep)
+        if p < 0:
+            return
+        try:
+            laa = self.seq[p-1]
+        except IndexError:
+            laa = '-'
+        try:
+            raa = self.seq[p+len(pep)]
+        except IndexError:
+            raa = '-'
         self.pdb.add_peptide(pep)
         self.pdb.store_protein_hit(self.id,pep,p,p+len,laa,raa)
 
@@ -464,21 +464,21 @@ class Protein:
             yield h
 
     def packedHits(self,filter=None):
-	therows = [ ]
+        therows = [ ]
         for ph in self.pepHitsByStart():
             if filter != None and ph.peptide not in filter:
                 continue
-	    inserted = False
-	    for r in therows:
-	        if r[-1].end < ph.start():
-		    r.append(ph)
-		    inserted = True
-		    break
-	    if not inserted:
-		therows.append([])
-		therows[-1].append(ph)
-	return therows
-	
+            inserted = False
+            for r in therows:
+                if r[-1].end < ph.start():
+                    r.append(ph)
+                    inserted = True
+                    break
+            if not inserted:
+                therows.append([])
+                therows[-1].append(ph)
+        return therows
+
     def maxnonolap(self,filter=None):
         lastnonolappos = -1
         nonolap = 0;
@@ -491,7 +491,7 @@ class Protein:
         return nonolap
 
     def coverage(self,filter=None):
-	assert self.length != None
+        assert self.length != None
         aacov = 0
         lastcovpos = -1
         for ph in self.pepHitsByStart():
@@ -504,7 +504,7 @@ class Protein:
                 aacov += ph.end-lastcovpos
                 lastcovpos = ph.end
         return float(aacov)/self.length
-    
+
     def hitset(self,filter=None):
         return set([ph.peptide for ph in self.pepHits() if filter != None and ph.peptide in filter])
 
@@ -520,6 +520,6 @@ if __name__ == "__main__":
     import sys, os
 
     protdb = ProteinDatabase(flag='n')
-    protdb.load_peptides(itertools.imap(str.strip,sys.stdin.readlines()))
-    print protdb.peptide_count()
+    protdb.load_peptides(map(str.strip,sys.stdin.readlines()))
+    print(protdb.peptide_count())
     del protdb

@@ -37,10 +37,10 @@ for p,t in zip([asp,chp,msp],["ASP","CHP","MSP"]):
         for h in headers[1:]:
             h = h.strip()
             val = r.get(h)
-	    if isinstance(val,basestring):
-		val = val.strip()
-	    if not val:
-		continue
+            if isinstance(val,basestring):
+                val = val.strip()
+            if not val:
+                continue
             if (t,h) not in protocols:
                 protocols[(t,h)] = dict()
             protocols[(t,h)][field] = str(val).strip()
@@ -55,43 +55,43 @@ for r in metadatafile:
     metadata[f] = dict(r.items())
     aspname = r['Analytical Sample Protocol']
     for k,v in protocols[("ASP",aspname)].items():
-	if isinstance(v,basestring):
-	    v = v.strip()
-	if v:
+        if isinstance(v,basestring):
+            v = v.strip()
+        if v:
             metadata[f]["ASP:"+k] = v
     chpname = r['Chromatography Protocol']
     for k,v in protocols[("CHP",chpname)].items():
-	if isinstance(v,basestring):
-	    v = v.strip()
-	if v:
+        if isinstance(v,basestring):
+            v = v.strip()
+        if v:
             metadata[f]["CHP:"+k] = v
     mspname = r['Mass Spectrometry Protocol']
     for k,v in protocols[("MSP",mspname)].items():
-	if isinstance(v,basestring):
-	    v = v.strip()
-	if v:
+        if isinstance(v,basestring):
+            v = v.strip()
+        if v:
             metadata[f]["MSP:"+k] = v
     if 'iTRAQ' in metadata[f]["ASP:Type"]:
         bs = []
         for reporter in (113,114,115,116,117,118,119,121):
             if r.get('%d-Biospecimen'%reporter):
-              if r.get('%d-Aliquot'%reporter):
-                bs.append("%d:%s-%s"%(reporter,r['%d-Biospecimen'%reporter],r['%d-Aliquot'%reporter]))
-	      else:
-                bs.append("%d:%s"%(reporter,r['%d-Biospecimen'%reporter]))
+                if r.get('%d-Aliquot'%reporter):
+                    bs.append("%d:%s-%s"%(reporter,r['%d-Biospecimen'%reporter],r['%d-Aliquot'%reporter]))
+                else:
+                    bs.append("%d:%s"%(reporter,r['%d-Biospecimen'%reporter]))
         metadata[f]["Biospecimen"] = ','.join(bs)
     else:
-	if r.get('Aliquot'):
-          metadata[f]["Biospecimen"] = "%s-%s"%(r['Biospecimen'],r['Aliquot'])
-	else:
-          metadata[f]["Biospecimen"] = "%s"%(r['Biospecimen'],)
+        if r.get('Aliquot'):
+            metadata[f]["Biospecimen"] = "%s-%s"%(r['Biospecimen'],r['Aliquot'])
+        else:
+            metadata[f]["Biospecimen"] = "%s"%(r['Biospecimen'],)
     # JHU's POOL is not a fraction, per se...
     if metadata[f]['Fraction'] == 'POOL':
-	metadata[f]['Fraction'] = metadata[f]['Fraction']
-    elif metadata[f]['Fraction'] == 'N/A': 
-	metadata[f]['Fraction'] = "replicate %s"%(metadata[f]['Replicate'],)
+        metadata[f]['Fraction'] = metadata[f]['Fraction']
+    elif metadata[f]['Fraction'] == 'N/A':
+        metadata[f]['Fraction'] = "replicate %s"%(metadata[f]['Replicate'],)
     else:
-	metadata[f]['Fraction'] = "fraction %s"%(metadata[f]['Fraction'],)
+        metadata[f]['Fraction'] = "fraction %s"%(metadata[f]['Fraction'],)
 
 def getdict(config,section):
     return dict(config.items(section))
@@ -168,49 +168,49 @@ for q in quants:
 project['protocol'] = protocolstr
 
 templatestr = """
-MTD	submitter_name	Nathan Edwards
-MTD	submitter_email	nje5@georgetown.edu
-MTD	submitter_affiliation	CPTAC Data Coordinating Center & Georgetown University
-MTD	submitter_pride_login	nje5@georgetown.edu
-MTD	lab_head_name	$labhead.name.strip()
-MTD	lab_head_email	$labhead.email.strip()
-MTD	lab_head_affiliation	$labhead.affiliation.strip()
-MTD	project_title	$project.title.strip(): $subproteome, $site
-MTD	project_description	$project.description.strip()
+MTD     submitter_name  Nathan Edwards
+MTD     submitter_email nje5@georgetown.edu
+MTD     submitter_affiliation   CPTAC Data Coordinating Center & Georgetown University
+MTD     submitter_pride_login   nje5@georgetown.edu
+MTD     lab_head_name   $labhead.name.strip()
+MTD     lab_head_email  $labhead.email.strip()
+MTD     lab_head_affiliation    $labhead.affiliation.strip()
+MTD     project_title   $project.title.strip(): $subproteome, $site
+MTD     project_description     $project.description.strip()
 #if $tag
-MTD	project_tag	$tag
+MTD     project_tag     $tag
 #end if
-MTD	keywords	CPTAC CPTAC-$study CPTAC-$site
-MTD	sample_processing_protocol	$project.protocol. See associated protocols and methods documents at https://cptac-data-portal.georgetown.edu.
-MTD	data_processing_protocol	Processed using the CPTAC Common Data Analysis Pipeline at NIST. Peptide identifications from MSGF+. Filtered at 1% FDR. See associated protocols and methods documents at https://cptac-data-portal.georgetown.edu.
+MTD     keywords        CPTAC CPTAC-$study CPTAC-$site
+MTD     sample_processing_protocol      $project.protocol. See associated protocols and methods documents at https://cptac-data-portal.georgetown.edu.
+MTD     data_processing_protocol        Processed using the CPTAC Common Data Analysis Pipeline at NIST. Peptide identifications from MSGF+. Filtered at 1% FDR. See associated protocols and methods documents at https://cptac-data-portal.georgetown.edu.
 #for l in $project.links
-MTD	other_omics_link	$l
+MTD     other_omics_link        $l
 #end for
-MTD	experiment_type	[PRIDE, PRIDE:0000429, Shotgun proteomics, ]
-MTD	submission_type	COMPLETE
+MTD     experiment_type [PRIDE, PRIDE:0000429, Shotgun proteomics, ]
+MTD     submission_type COMPLETE
 #for id in $project.publications
-MTD	pubmed_id	$id
+MTD     pubmed_id       $id
 #end for
 #for s in $project.specieslist
-MTD	species	$s
+MTD     species $s
 #end for
 #for t in $project.tissuelist
-MTD	tissue	$t
+MTD     tissue  $t
 #end for
 #for c in $project.celltypelist
-MTD	cell_type	$c
+MTD     cell_type       $c
 #end for
 #for d in $project.diseaselist
-MTD	disease	$d
+MTD     disease $d
 #end for
 #for i in $project.instrument
-MTD	instrument	$i
+MTD     instrument      $i
 #end for
 #for q in $project.quantitation
-MTD	quantification	$q
+MTD     quantification  $q
 #end for
 """
-import warnings 
+import warnings
 warnings.filterwarnings('ignore',category=UserWarning,module='Cheetah\.Compile')
 from Cheetah.Template import Template
 
@@ -229,65 +229,65 @@ print >>wh, str(preamble)
 
 def findall(dir,ext=None,notext=None,regex=None,clean=False):
     if regex:
-	regex = re.compile(regex)
+        regex = re.compile(regex)
     retval = []
     sfs = []
     for root, dirs, files in os.walk(dir, followlinks=True):
-	dirs.sort()
+        dirs.sort()
         files.sort()
-	if not ext:
-          for d in dirs:
-	    if d.endswith('_mzIdentML') and d+'.cksum' not in files:
-		print >>sys.stderr, "Checksum file %s is missing"%(os.path.join(root,d+'.cksum'),)
-	    if d.endswith('_mzML') and d+'.cksum' not in files:
-		print >>sys.stderr, "Checksum file %s is missing"%(os.path.join(root,d+'.cksum'),)
-	    if d.endswith('_raw') and d+'.cksum' not in files:
-		print >>sys.stderr, "Checksum file %s is missing"%(os.path.join(root,d+'.cksum'),)
-	nfiles = 0
+        if not ext:
+            for d in dirs:
+                if d.endswith('_mzIdentML') and d+'.cksum' not in files:
+                    print >>sys.stderr, "Checksum file %s is missing"%(os.path.join(root,d+'.cksum'),)
+                if d.endswith('_mzML') and d+'.cksum' not in files:
+                    print >>sys.stderr, "Checksum file %s is missing"%(os.path.join(root,d+'.cksum'),)
+                if d.endswith('_raw') and d+'.cksum' not in files:
+                    print >>sys.stderr, "Checksum file %s is missing"%(os.path.join(root,d+'.cksum'),)
+        nfiles = 0
         for name in files:
             if not ext and name.startswith('~'):
-		if clean:
-		    os.unlink(os.path.join(root,name))
-		    print >>sys.stderr, "File %s removed"%(os.path.join(root,name),)
-		else:
-		    print >>sys.stderr, "File %s ignored"%(os.path.join(root,name),)
+                if clean:
+                    os.unlink(os.path.join(root,name))
+                    print >>sys.stderr, "File %s removed"%(os.path.join(root,name),)
+                else:
+                    print >>sys.stderr, "File %s ignored"%(os.path.join(root,name),)
                 continue
-	    if not ext and name.endswith('.bak'):
-		if clean:
-		    os.unlink(os.path.join(root,name))
-		    print >>sys.stderr, "File %s removed"%(os.path.join(root,name),)
-		else:
-		    print >>sys.stderr, "File %s ignored"%(os.path.join(root,name),)
-		continue
-	    if not ext and name.endswith('.log'):
-		if clean:
-		    os.unlink(os.path.join(root,name))
-		    print >>sys.stderr, "File %s removed"%(os.path.join(root,name),)
-		else:
-		    print >>sys.stderr, "File %s ignored"%(os.path.join(root,name),)
-		continue
-	    if not ext and name.endswith('_tsv.cksum'):
-		if clean:
-		    os.unlink(os.path.join(root,name))
-		    print >>sys.stderr, "File %s removed"%(os.path.join(root,name),)
-		else:
-		    print >>sys.stderr, "File %s ignored"%(os.path.join(root,name),)
-		continue
-	    if not ext and name.endswith('.psm'):
-		if clean:
-		    os.unlink(os.path.join(root,name))
-		    print >>sys.stderr, "File %s removed"%(os.path.join(root,name),)
-		else:
-		    print >>sys.stderr, "File %s ignored"%(os.path.join(root,name),)
-		continue
+            if not ext and name.endswith('.bak'):
+                if clean:
+                    os.unlink(os.path.join(root,name))
+                    print >>sys.stderr, "File %s removed"%(os.path.join(root,name),)
+                else:
+                    print >>sys.stderr, "File %s ignored"%(os.path.join(root,name),)
+                continue
+            if not ext and name.endswith('.log'):
+                if clean:
+                    os.unlink(os.path.join(root,name))
+                    print >>sys.stderr, "File %s removed"%(os.path.join(root,name),)
+                else:
+                    print >>sys.stderr, "File %s ignored"%(os.path.join(root,name),)
+                continue
+            if not ext and name.endswith('_tsv.cksum'):
+                if clean:
+                    os.unlink(os.path.join(root,name))
+                    print >>sys.stderr, "File %s removed"%(os.path.join(root,name),)
+                else:
+                    print >>sys.stderr, "File %s ignored"%(os.path.join(root,name),)
+                continue
+            if not ext and name.endswith('.psm'):
+                if clean:
+                    os.unlink(os.path.join(root,name))
+                    print >>sys.stderr, "File %s removed"%(os.path.join(root,name),)
+                else:
+                    print >>sys.stderr, "File %s ignored"%(os.path.join(root,name),)
+                continue
             if (ext == None or name.endswith(ext)) and \
-	       (regex == None or regex.search(os.path.join(root,name))) and \
-	       (notext == None or all(map(lambda ne: not name.endswith(ne), notext))):
+               (regex == None or regex.search(os.path.join(root,name))) and \
+               (notext == None or all(map(lambda ne: not name.endswith(ne), notext))):
                 retval.append(os.path.join(root,name))
-		nfiles += 1
-	if not ext and nfiles == 0 and clean:
-	    print >>sys.stderr, "Empty directory %s removed"%(root,)
-	    os.rmdir(root)
+                nfiles += 1
+        if not ext and nfiles == 0 and clean:
+            print >>sys.stderr, "Empty directory %s removed"%(root,)
+            os.rmdir(root)
     return retval
 
 raw = findall(d,'.raw')
@@ -302,7 +302,7 @@ rest = findall(d,notext=['.raw','.mzML.gz','.mzid.gz'],clean=clean)
 
 def getbase(fn):
     if fn.endswith('.gz'):
-	return os.path.split(fn)[1].rsplit('.',2)[0]
+        return os.path.split(fn)[1].rsplit('.',2)[0]
     return os.path.split(fn)[1].rsplit('.',1)[0]
 
 bybase = defaultdict(dict)
@@ -314,11 +314,11 @@ for fn in mzml:
 
 # def normpath(f):
 #     return os.path.split(os.path.abspath(f))[1]
-# 
+#
 def normpath(f):
     return os.path.abspath(f)
 
-print >>wh, '\t'.join("FMH	file_id	file_type	file_path	file_mapping	".split() + [])
+print >>wh, '\t'.join("FMH      file_id file_type       file_path       file_mapping    ".split() + [])
 ind = 0
 for resultfile in sorted(mzid):
     base = getbase(resultfile)
@@ -326,14 +326,14 @@ for resultfile in sorted(mzid):
     peakfile = bybase[base]['mzml']
     needraw = False
     if rawfile not in file2ind:
-	needraw = True
-	file2ind[rawfile] = ind
-	ind += 1
+        needraw = True
+        file2ind[rawfile] = ind
+        ind += 1
     needpeak = False
     if peakfile not in file2ind:
-	needpeak = True
-	file2ind[peakfile] = ind
-	ind += 1
+        needpeak = True
+        file2ind[peakfile] = ind
+        ind += 1
     file2ind[resultfile] = ind
     ind += 1
     if needraw:
@@ -341,7 +341,7 @@ for resultfile in sorted(mzid):
     if needpeak:
         print >>wh, '\t'.join(map(str,["FME",file2ind[peakfile],"PEAK",normpath(peakfile),""]))
     print >>wh, '\t'.join(map(str,["FME",file2ind[resultfile],"RESULT",normpath(resultfile),"%d,%d"%(file2ind[rawfile],file2ind[peakfile])]))
-    
+
 for otheri in sorted(rest):
     print >>wh, '\t'.join(map(str,["FME",ind,"OTHER",normpath(otheri),""]))
     ind += 1
@@ -349,14 +349,14 @@ print >>wh, ""
 
 metadata_seen = set()
 
-print >>wh, '\t'.join("SMH	file_id	species	tissue	cell_type	disease	modification	instrument	quantification	experimental_factor".split())
+print >>wh, '\t'.join("SMH      file_id species tissue  cell_type       disease modification    instrument      quantification  experimental_factor".split())
 for resultfile in sorted(mzid):
     resibase = getbase(resultfile)
     md = metadata[resibase]
     metadata_seen.add(resibase)
     labelling = ""
     if md.get('ASP:Labelling') in ontology:
-	labelling = "[%s, %s, %s, ]"%ontology[md['ASP:Labelling']]
+        labelling = "[%s, %s, %s, ]"%ontology[md['ASP:Labelling']]
     print >>wh, '\t'.join(map(str,["SME",
                              file2ind[resultfile],
                              project['species'],
@@ -373,4 +373,4 @@ wh.close()
 
 for rb in sorted(metadata):
     if rb not in metadata_seen:
-	print >>sys.stderr, "Metadata file %s missing"%rb
+        print >>sys.stderr, "Metadata file %s missing"%rb
