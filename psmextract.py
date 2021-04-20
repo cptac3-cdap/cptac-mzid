@@ -9,7 +9,7 @@ from psmformat import SequenceDatabase, PSMCache
 
 psmparsers = getParsers()
 
-VERSION='1.1.0'
+from version import VERSION
 parser = OptionParser(version=VERSION)
 parser.add_option("--format",type="choice",choices=psmparsers,default=psmparsers[0],dest="psmfmt",help="PSM input file format")
 parser.add_option("--seqdb",type="string",default="RefSeq:Human,UniProt:Human",

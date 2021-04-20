@@ -1,5 +1,5 @@
 #!/bin/sh
-VER=`python3 psmextract.py --version | tr -d -c '0-9.'`
+VER=`python3 version.py`
 OS=`uname`
 AR=`uname -m`
 XX="linux-$AR"
