@@ -43,7 +43,7 @@ except OSError:
 for f in sys.argv[2:]:
     shutil.copyfile(f,base+'/'+f)
     os.chmod(os.path.join(base,f),stat.S_IEXEC|stat.S_IRWXU)
-for pkg in ['peptidescan','parsimony.py','mzml.py','StringIndex.py','find_elementtree.py','psmformat.py','psmparse.py','version.py']:
+for pkg in ['peptidescan','parsimony.py','mzml.py','StringIndex.py','find_elementtree.py','psmformat.py','psmparse.py']:
     pdir,pname = os.path.split(pkg)
     if os.path.isdir(pkg):
         shutil.copytree(pkg,os.path.join(base,pname))

@@ -12,10 +12,10 @@ case $OS in
   Cygwin) MACH="win32"; EXT=".zip"; EXE=".exe";;
        *) MACH="linux-$AR"; EXT=".tgz"; EXE=".sh";;
 esac
-if [ -f ./psmextract.py ]; then
+if [ -f ./version.py ]; then
     MACH="src"; EXT=".tgz"; EXE=".py"
 fi
-ZIP=cptac-mzid$VER.$MACH$EXT
+ZIP=cptacmzid$VER.$MACH$EXT
 rm -f $ZIP
 # Assume wget and unzip/tar are on the path...
 wget --no-check-certificate -O $ZIP $URL/$ZIP
@@ -24,5 +24,5 @@ if [ "$EXT" = ".zip" ]; then
 else
     tar -C .. -xvzf $ZIP
 fi
-./psmextract$EXE --version
+./version$EXE
 rm -f $ZIP
