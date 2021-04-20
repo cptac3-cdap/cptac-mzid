@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 import sys, os.path, os, re, glob, encodings
 from operator import itemgetter
 from optparse import OptionParser
@@ -112,6 +112,13 @@ for prid in protindex:
     sdbid,pracc = protindex.string(prid).rsplit(':',1)
     allprot.append([prid,sdbid,pracc])
 
+def cmp(a,b):
+    if a < b:
+        return -1
+    elif a > b:
+        return 1
+    return 0
+
 def prcmp(a,b):
     # compare sequence databases and choose the one with smallest
     # priority
@@ -127,7 +134,9 @@ def prcmp(a,b):
         return seqdbs[a[1]].prefer((a[0],dla),(b[0],dlb))
     return cmp(a[0],b[0])
 
-allprot.sort(cmp=prcmp)
+from functools import cmp_to_key
+
+allprot.sort(key=cmp_to_key(prcmp))
 
 pr2key = dict()
 for i,prid in enumerate(map(itemgetter(0),allprot)):

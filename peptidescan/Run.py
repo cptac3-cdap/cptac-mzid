@@ -34,7 +34,7 @@ def dump(hin,hout):
         hout.flush()
 
 def enqueue(handle,queue):
-    for line in iter(handle.readline, ''):
+    for line in handle:
         # print >>sys.stderr, line
         queue.put(line)
     handle.close()
@@ -72,21 +72,21 @@ class PeptideScanCommandLine(CommandLine):
             terr = threading.Thread(target=enqueue,args=(herr,qerr))
             terr.daemon = True
             terr.start()
-            hin.write('\n'.join(peps[b:b+blocksize])+'\n')
+            hin.write(bytes('\n'.join(peps[b:b+blocksize])+'\n',encoding='ascii'))
             hin.close()
 
             while True:
                 # stderr
                 try:
                     line = qerr.get_nowait()
-                    print(line.rstrip(), file=sys.stderr)
+                    print(line.decode('ascii').rstrip(), file=sys.stderr)
                     continue
                 except queue.Empty:
                     pass
                 # stdout
                 try:
                     line = qout.get_nowait()
-                    yield Result.parse(line)
+                    yield Result.parse(line.decode('ascii'))
                     continue
                 except queue.Empty:
                     pass

@@ -9,6 +9,13 @@ __all__ = [ 'AccessionRules', 'AccessionRuleFactory',
             'AccessionRuleAuto', 'TestAccessionRules',
             'PeptideRemapper' ]
 
+def cmp(a,b):
+    if a < b:
+        return -1
+    elif a > b:
+        return 1
+    return 0
+
 def AccessionRuleFactory(name):
     for cls in AccessionRuleClasses:
         if cls.name == name:

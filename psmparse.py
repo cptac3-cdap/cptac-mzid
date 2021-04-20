@@ -10,7 +10,7 @@ def fopen(filename):
     if filename.lower().endswith('.gz'):
         h = gzip.open(filename)
     else:
-        h = open(filename,'rb')
+        h = open(filename,'r')
     return h
 
 def typecast(d):
