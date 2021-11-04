@@ -4,7 +4,7 @@ from operator import itemgetter
 from optparse import OptionParser
 from collections import defaultdict
 
-from psmparse import getParser, getParsers, AddMZMLFields
+from psmparse import getParser, getParsers, AddMZMLFields, AddReporterIonFields
 from psmformat import SequenceDatabase, PSMCache
 
 psmparsers = getParsers()
@@ -20,6 +20,8 @@ parser.add_option("--psmfilter",type="string",default=None,
                   dest="psmfilter",help="Criteria for accepting PSMs (Python expression applied original data). Default: None.")
 parser.add_option("--seqdir",type="string",default="sequence",
                   dest="seqdir",help="Directory containing the sequence files. Default: \"sequence\".")
+parser.add_option("--labels",type="string",default=None,
+                  dest="labels",help="Extract reporter ions. Default: No reporter ions.")
 
 opts,args = parser.parse_args()
 if opts.seqdb:
@@ -44,7 +46,10 @@ specparams = AddMZMLFields.specparams
 md = psms.metadata()
 md['Software'].append("psmextract v%s"%VERSION)
 
-psmcache = PSMCache(AddMZMLFields(psms,opts.specdir),scores,params,specparams)
+if opts.labels:
+    psmcache = PSMCache(AddReporterIonFields(AddMZMLFields(psms,opts.specdir),opts.labels,opts.specdir),scores,params,specparams)
+else:
+    psmcache = PSMCache(AddMZMLFields(psms,opts.specdir),scores,params,specparams)
 
 for sdb in list(seqdbs.values()):
     sdb.peptidemap(psmcache.peptides())

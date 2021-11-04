@@ -742,6 +742,42 @@ class AddMZMLFields(object):
     def __iter__(self):
         return self.psms()
 
+class AddReporterIonFields(object):
+
+    def __init__(self,input,labels,specdir=None):
+        self.input = input
+        self.labels = labels
+        self.specdir = specdir
+
+    def psms(self):
+        currentmzmlfile = None
+        for psm in self.input.psms():
+            mzmlfilename = psm['Location']
+            if mzmlfilename != currentmzmlfile:
+                if not self.specdir:
+                    filename = os.path.join(os.path.split(psm['_fullpath'])[0],mzmlfilename)
+                else:
+                    filename = os.path.join(self.specdir,mzmlfilename)
+                if not os.path.exists(filename):
+                    filename += '.gz'
+                assert os.path.exists(filename)
+                currentmzmlfile = mzmlfilename
+                specmd = {}
+                for nativeID,reporters in mzml.iterreporters(filename,self.labels):
+                    specmd[nativeID] = reporters
+            nativeID = psm['SpectrumID']
+            for k,v in specmd[nativeID].items():
+                if not k.startswith("_"):
+                    psm["CPTAC-CDAP:"+self.labels+"-"+k] = "%.6g/%s"%(v[0],"%.2f"%v[2] if v[2] != None else '?')
+                elif k == "_total":
+                    psm["CPTAC-CDAP:"+self.labels+"-TotalAb"] = "%.6g"%v
+                elif k == "_frac":
+                    psm["CPTAC-CDAP:"+self.labels+"-FractionOfTotalAb"] = "%.6g"%v
+            yield psm
+
+    def __iter__(self):
+        return self.psms()
+
 def getParser(fmt):
     if fmt in parsers:
         return eval(fmt)
