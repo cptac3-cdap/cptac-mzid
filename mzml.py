@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys, os, os.path, gzip, zlib, math
+import sys, os, os.path, gzip, zlib, math, re
 from base64 import b64decode
 from collections import defaultdict
 from array import array
@@ -175,6 +175,71 @@ def iterreporters(infile,labels,**kw):
                 
     h.close()
 
+def iterms2(infile):
+    if infile.lower().endswith('.gz'):
+        h = gzip.open(infile)
+    else:
+        h = open(infile,'rb')
+    for event, ele in ET.iterparse(h):
+        if ele.tag == SPEC:
+            specid = ele.attrib['id']
+            cvparams = getcvparams(ele,specparams)
+            msn = cvparams.get('MSn spectrum',False)
+            if msn:
+                mz = []; it = []
+                for bda in ele.findall(BDA):
+                    cvparams1 = getcvparams(bda,bdaparams)
+                    assert cvparams1.get('64-bit float',False) or cvparams1.get('32-bit float',False)
+                    ftype = ('f' if cvparams1.get('32-bit float',False) else 'd')
+                    uncomp = ((lambda x: x) if not cvparams1.get('zlib compression',False) else zlib.decompress)
+                    bintxt = bda.findtext(BINARY)
+                    if bintxt:
+                        values = array(ftype,uncomp(b64decode(bintxt)))
+                        if sys.byteorder == 'big':
+                            values.byteswap()
+                        if cvparams1.get('m/z array',False):
+                            mz  = values
+                        if cvparams1.get('intensity array',False):
+                            it = values
+                assert(len(mz) == len(it))
+                scan = ele.find(SCAN)
+                cvparams = getcvparams(scan,scanparams)
+                rt = cvparams['scan start time']
+                prec = ele.find(PRE)
+                selected = prec.find(SEL)
+                cvparams = getcvparams(selected,selionparams)
+                precursormz = cvparams['selected ion m/z']
+                precursorz = int(cvparams.get('charge state'))
+                precursorit = cvparams.get('peak intensity')
+                yield dict(peaks=sorted(zip(mz,it)), 
+                           precursor=dict(mz=precursormz, z=precursorz, it=precursorit),
+                           metadata=dict(rt=rt,id=specid))
+
+    h.close()
+
+def write_mgf(infile,out=None):
+    if not out:
+        out = sys.stdout
+    
+    for s in iterms2(infile):
+        peaks = s['peaks']
+        if len(peaks) == 0:
+            continue
+        precursor = s['precursor']
+        metadata = s['metadata']
+        scankvpairs = re.split(r' ([a-z]+)='," "+metadata['id'])
+        scandata = dict()
+        for i in range(1,len(scankvpairs),2):
+            scandata[scankvpairs[i]] = scankvpairs[i+1]
+        metadata['scan'] = scandata['scan']
+        print("BEGIN IONS",file=out)
+        print("TITLE=Scan:%(scan)s RT:%(rt)s"%metadata,file=out)
+        print("CHARGE=%(z)s"%precursor,file=out)
+        print("PEPMASS=%(mz)s"%precursor,file=out)
+        for p in sorted(peaks):
+            print("%f %f"%p,file=out)
+        print("END IONS\n",file=out)
+
 if __name__ == '__main__':
 
     import sys, os
@@ -182,6 +247,17 @@ if __name__ == '__main__':
     # for t in iterprecursor(sys.argv[1]):
     #     print('\t'.join(map(str,t)))
 
-    for t in iterreporters(sys.argv[1],"TMT10"):
-        print(t)
-                                  
+    cmd = sys.argv[1]
+    args = sys.argv[2:]
+
+    if cmd == "write_mgf":
+        write_mgf(*args[:2])
+
+    elif cmd == "reporters":
+        for t in iterreporters(*args[:2])
+            print(t)
+
+    elif cmd == "precursors":
+        for t in iterprecursor(*args[:1]):
+            print('\t'.join(map(str,t)))
+            
