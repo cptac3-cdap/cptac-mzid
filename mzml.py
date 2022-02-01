@@ -254,7 +254,7 @@ if __name__ == '__main__':
         write_mgf(*args[:2])
 
     elif cmd == "reporters":
-        for t in iterreporters(*args[:2])
+        for t in iterreporters(*args[:2]):
             print(t)
 
     elif cmd == "precursors":
