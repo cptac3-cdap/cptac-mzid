@@ -20,6 +20,10 @@ selionparams = [
     ('charge state', 'MS:1000041', str),
     ('peak intensity', 'MS:1000042', str),
     ]
+activationparams = [ 
+    ('beam-type collision-induced dissociation','MS:1000422',present),
+    ('collision energy','MS:1000045',float),
+]
 scanparams = [
     # convert to seconds...
     ('scan start time', 'MS:1000016', lambda s: 60.0*float(s)),
@@ -47,6 +51,7 @@ SPEC = ns+'spectrum'
 CVP  = ns+'cvParam'
 PRE  = ns+'precursorList/' + ns + 'precursor'
 SEL  = ns+'selectedIonList/' + ns + 'selectedIon'
+ACT  = ns+'activation'
 SCAN = ns+'scanList/' + ns + 'scan'
 BDA  = ns+'binaryDataArrayList/' + ns + 'binaryDataArray'
 BINARY = ns+'binary'
@@ -99,7 +104,7 @@ def get_reporter_ions(labelname):
         for sec in config.sections():
             reporters[sec] = (dict(),dict())
             for k,v in config.items(sec):
-                if k not in ("tolerance","resolution","type","plex","alias"):
+                if k not in ("tolerance","resolution","type","plex","tags","alias"):
                     reporters[sec][0][k] = float(v)
                 elif k in ("tolerance","resolution"):
                     reporters[sec][1][k] = float(v)
@@ -107,8 +112,12 @@ def get_reporter_ions(labelname):
                     reporters[sec][1][k] = int(v)
                 elif k in ("type",):
                     reporters[sec][1][k] = v
+                elif k in ("tags",):
+                    reporters[sec][1][k] = [ vi.strip() for vi in v.split(',') ]
                 elif k == "alias":
                     alias.append((v,sec))
+            assert(len(reporters[sec][0]) == reporters[sec][1]['plex'])
+            assert(len(reporters[sec][1]['tags']) == reporters[sec][1]['plex'])
         for a,sec in alias:
             reporters[a] = (dict(reporters[sec][0].items()),dict(reporters[sec][1].items()))
     return reporters[labelname]
@@ -138,7 +147,7 @@ def iterreporters(infile,labels,**kw):
             cvparams = getcvparams(ele,specparams)
             msn = cvparams.get('MSn spectrum',False)
             if msn:
-                mz = None; it = None
+                mz = []; it = []
                 for bda in ele.findall(BDA):
                     cvparams1 = getcvparams(bda,bdaparams)
                     assert cvparams1.get('64-bit float',False) or cvparams1.get('32-bit float',False)
@@ -153,7 +162,7 @@ def iterreporters(infile,labels,**kw):
                             mz  = values
                         if cvparams1.get('intensity array',False):
                             it = values
-                assert mz != None and it != None
+                assert(len(mz) == len(it))
                 totalab = sum(it)
                 peaks = list(sorted([ (mz,it) for (mz,it) in zip(mz,it) if lowmz <= mz <= highmz ]))
                 labit = dict((k,0.0) for k in ions.keys())
@@ -172,7 +181,7 @@ def iterreporters(infile,labels,**kw):
                 data['_total'] = sum(labit.values())
                 data['_frac'] = data['_total']/totalab
                 yield specid,data
-                
+
     h.close()
 
 def iterms2(infile):
@@ -202,20 +211,33 @@ def iterms2(infile):
                         if cvparams1.get('intensity array',False):
                             it = values
                 assert(len(mz) == len(it))
+                extraparams = dict()
                 scan = ele.find(SCAN)
                 cvparams = getcvparams(scan,scanparams)
                 rt = cvparams['scan start time']
                 prec = ele.find(PRE)
+                precid = prec.attrib['spectrumRef']
                 selected = prec.find(SEL)
                 cvparams = getcvparams(selected,selionparams)
                 precursormz = cvparams['selected ion m/z']
                 precursorz = int(cvparams.get('charge state'))
                 precursorit = cvparams.get('peak intensity')
+                activation = prec.find(ACT)
+                cvparams = getcvparams(activation,activationparams)
+                if cvparams.get('beam-type collision-induced dissociation',False):
+                    extraparams['hcdenergy'] = cvparams['collision energy']
                 yield dict(peaks=sorted(zip(mz,it)), 
                            precursor=dict(mz=precursormz, z=precursorz, it=precursorit),
-                           metadata=dict(rt=rt,id=specid))
+                           metadata=dict(rt=rt,id=specid,precid=precid,**extraparams))
 
     h.close()
+
+def specid(idstr):
+    scankvpairs = re.split(r' ([a-z]+)='," "+idstr)
+    scandata = dict()
+    for i in range(1,len(scankvpairs),2):
+        scandata[scankvpairs[i]] = scankvpairs[i+1]
+    return scandata
 
 def write_mgf(infile,out=None):
     if not out:
@@ -227,18 +249,31 @@ def write_mgf(infile,out=None):
             continue
         precursor = s['precursor']
         metadata = s['metadata']
-        scankvpairs = re.split(r' ([a-z]+)='," "+metadata['id'])
-        scandata = dict()
-        for i in range(1,len(scankvpairs),2):
-            scandata[scankvpairs[i]] = scankvpairs[i+1]
-        metadata['scan'] = scandata['scan']
+        metadata['scan'] = specid(metadata['id'])['scan']
+        metadata['precscan'] = specid(metadata['precid'])['scan']
         print("BEGIN IONS",file=out)
-        print("TITLE=Scan:%(scan)s RT:%(rt)s"%metadata,file=out)
+        print("TITLE=Scan:%(scan)s RT:%(rt)s HCD:%(hcdenergy)s PrecursorScan:%(precscan)s"%metadata,file=out)
         print("CHARGE=%(z)s"%precursor,file=out)
         print("PEPMASS=%(mz)s"%precursor,file=out)
         for p in sorted(peaks):
             print("%f %f"%p,file=out)
         print("END IONS\n",file=out)
+
+def write_reporters(infile,labelname,*args,**kw):
+    out = sys.stdout
+    labels,labelmd = get_reporter_ions(labelname)
+    for sid,data in iterreporters(infile,labelname,*args,**kw):
+        line = []
+        scan = specid(sid)['scan']
+        line.append(scan)
+        line.append(labelname)
+        for tag in labelmd['tags']:
+            line.append(float("%.5e"%data[tag][0]))
+        for tag in labelmd['tags']:
+            line.append("%.2f"%data[tag][2] if data[tag][2] != None else '?')
+        line.append(float("%.5e"%data['_frac']))
+        line.append(float("%.5e"%data['_total']))
+        print("\t".join(map(str,line)),file=out)
 
 if __name__ == '__main__':
 
@@ -253,11 +288,6 @@ if __name__ == '__main__':
     if cmd == "write_mgf":
         write_mgf(*args[:2])
 
-    elif cmd == "reporters":
-        for t in iterreporters(*args[:2]):
-            print(t)
-
-    elif cmd == "precursors":
-        for t in iterprecursor(*args[:1]):
-            print('\t'.join(map(str,t)))
+    elif cmd == "write_reporters":
+        write_reporters(*args[:2])
             
