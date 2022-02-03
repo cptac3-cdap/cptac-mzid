@@ -271,7 +271,7 @@ def write_reporters(infile,labelname,*args,**kw):
             line.append(float("%.5e"%data[tag][0]))
         for tag in labelmd['tags']:
             line.append("%.2f"%data[tag][2] if data[tag][2] != None else '?')
-        line.append(float("%.5e"%data['_frac']))
+        line.append(float("%.5e"%data['_frac']) if max(data[t][0] for t in labelmd['tags']) > 0 else "?")
         # line.append(float("%.5e"%data['_total']))
         print("\t".join(map(str,line)),file=out)
 
