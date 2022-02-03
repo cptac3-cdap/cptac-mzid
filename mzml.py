@@ -292,11 +292,11 @@ def add_spec_metadata(infile,psmfile):
     for row in reader:
         if writer == None:
              fieldnames = reader.fieldnames
-             if 'PrecursorPurity' in fieldnames:
-                 fieldnames.remove('PrecursorPurity')
-             if 'FractionDecomposition' in fieldnames:
-                 fieldnames.remove('FractionDecomposition')
-             writer = csv.DictWriter(out,fieldnames,dialect='excel-tab')
+             # if 'PrecursorPurity' in fieldnames:
+             #     fieldnames.remove('PrecursorPurity')
+             # if 'FractionDecomposition' in fieldnames:
+             #     fieldnames.remove('FractionDecomposition')
+             writer = csv.DictWriter(out,fieldnames,extrasaction='ignore',dialect='excel-tab')
              writer.writeheader()
         scan = int(row['ScanNum'])
         if scan in specmd:
