@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys, os, os.path, gzip, zlib, math, re
+import sys, os, os.path, gzip, zlib, math, re, csv
 from base64 import b64decode
 from collections import defaultdict
 from array import array
@@ -227,8 +227,8 @@ def iterms2(infile):
                 if cvparams.get('beam-type collision-induced dissociation',False):
                     extraparams['hcdenergy'] = cvparams['collision energy']
                 yield dict(peaks=sorted(zip(mz,it)), 
-                           precursor=dict(mz=precursormz, z=precursorz, it=precursorit),
-                           metadata=dict(rt=rt,id=specid,precid=precid,**extraparams))
+                           precursor=dict(mz=precursormz, z=precursorz, it=precursorit, id=precid),
+                           metadata=dict(rt=rt, id=specid, **extraparams))
 
     h.close()
 
@@ -250,7 +250,7 @@ def write_mgf(infile,out=None):
         precursor = s['precursor']
         metadata = s['metadata']
         metadata['scan'] = specid(metadata['id'])['scan']
-        metadata['precscan'] = specid(metadata['precid'])['scan']
+        metadata['precscan'] = specid(precursor['id'])['scan']
         print("BEGIN IONS",file=out)
         print("TITLE=Scan:%(scan)s RT:%(rt)s HCD:%(hcdenergy)s PrecursorScan:%(precscan)s"%metadata,file=out)
         print("CHARGE=%(z)s"%precursor,file=out)
@@ -272,8 +272,36 @@ def write_reporters(infile,labelname,*args,**kw):
         for tag in labelmd['tags']:
             line.append("%.2f"%data[tag][2] if data[tag][2] != None else '?')
         line.append(float("%.5e"%data['_frac']))
-        line.append(float("%.5e"%data['_total']))
+        # line.append(float("%.5e"%data['_total']))
         print("\t".join(map(str,line)),file=out)
+
+def add_spec_metadata(infile,psmfile):
+    out = sys.stdout
+    specmd = defaultdict(dict)
+    for s in iterms2(infile):
+        metadata = s['metadata']
+        precursor = s['precursor']
+        scan = int(specid(metadata['id'])['scan'])
+        specmd[scan]['PrecursorScanNum'] = specid(precursor['id'])['scan']
+        specmd[scan]['OriginalPrecursorMz'] = precursor['mz']
+        specmd[scan]['OriginalCharge'] = precursor['z']
+        if 'hcdenergy' in metadata:
+            specmd[scan]['HCDEnergy'] = metadata['hcdenergy']
+    reader = csv.DictReader(open(psmfile),dialect='excel-tab')
+    writer = None
+    for row in reader:
+        if writer == None:
+             fieldnames = reader.fieldnames
+             if 'PrecursorPurity' in fieldnames:
+                 fieldnames.remove('PrecursorPurity')
+             if 'FractionDecomposition' in fieldnames:
+                 fieldnames.remove('FractionDecomposition')
+             writer = csv.DictWriter(out,fieldnames,dialect='excel-tab')
+             writer.writeheader()
+        scan = int(row['ScanNum'])
+        if scan in specmd:
+            row.update(specmd[scan])
+        writer.writerow(row)
 
 if __name__ == '__main__':
 
@@ -291,3 +319,5 @@ if __name__ == '__main__':
     elif cmd == "write_reporters":
         write_reporters(*args[:2])
             
+    elif cmd == "add_spec_metadata":
+        add_spec_metadata(*args[:2])
