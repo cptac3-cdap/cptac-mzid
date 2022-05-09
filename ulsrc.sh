@@ -2,5 +2,5 @@
 VER=`python3 version.py`
 XX="src"
 mkdir -p build dist
-python3 ./tosrc.py build/cptacmzid-${VER}.${XX} psmextract.py checkMzMLsha1.py msconvertall.py packageraw.py mzml.py version.py
+python3 ./tosrc.py build/cptacmzid-${VER}.${XX} psmextract.py checkMzMLsha1.py msconvertall.py packageraw.py mzml.py featxml.py version.py
 mv build/cptacmzid-${VER}.${XX}.tgz dist
