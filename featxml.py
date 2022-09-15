@@ -64,11 +64,11 @@ def write_features(infile,qvalue=0.01,out=None):
          out = open(out,'w')
     keys = ['scan','rt','mz','z','pepseq','calcmz','area','intensity','fwhm','status']
     headers = ['Scan','RT','MZ','Charge','Peptide','CalcMZ','Area','Intensity','FWHM','Status']
-    print >>out, "\t".join(headers)
+    print("\t".join(headers),file=out)
     for f in iterfeat(infile):
         if f['qvalue'] > qvalue:
             continue
-        print >>out, "\t".join(map(lambda k: str(f.get(k,"")),keys))
+        print("\t".join(map(lambda k: str(f.get(k,"")),keys)),file=out)
 
     if out != sys.stdout:
         out.close()

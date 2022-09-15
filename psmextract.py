@@ -22,6 +22,8 @@ parser.add_option("--seqdir",type="string",default="sequence",
                   dest="seqdir",help="Directory containing the sequence files. Default: \"sequence\".")
 parser.add_option("--labels",type="string",default=None,
                   dest="labels",help="Extract reporter ions. Default: No reporter ions.")
+parser.add_option("--cdap",type="choice",choices=['1.1','2.0'],default='1.1',
+                  dest="cdapversion",help="CPTAC-CDAP version. Default: v1.1.")
 
 opts,args = parser.parse_args()
 if opts.seqdb:
@@ -30,7 +32,7 @@ else:
     opts.seqdb = []
 
 PSMParser = getParser(opts.psmfmt)
-psms = PSMParser(args,filter=opts.psmfilter)
+psms = PSMParser(args,filter=opts.psmfilter,cdapversion=opts.cdapversion)
 
 if len(set(psms.seqdbs())|set(opts.seqdb)) > 0:
     opts.seqdb.extend(psms.seqdbs())

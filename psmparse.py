@@ -64,10 +64,21 @@ class CDAP_NISTPSM_CPTAC2(object):
     TMT11-126C TMT11-127N TMT11-127C TMT11-128N TMT11-128C
     TMT11-129N TMT11-129C TMT11-130N TMT11-130C TMT11-131N TMT11-131C
     TMT11-Flags TMT11-FractionOfTotalAb TMT11-TotalAb
+    TMT16-126C TMT16-127N TMT16-127C TMT16-128N TMT16-128C
+    TMT16-129N TMT16-129C TMT16-130N TMT16-130C TMT16-131N
+    TMT16-131C TMT16-132N TMT16-132C TMT16-133N TMT16-133C TMT16-134N
+    TMT16-Flags TMT16-FractionOfTotalAb TMT16-TotalAb
+    TMT18-126C TMT18-127N TMT18-127C TMT18-128N TMT18-128C
+    TMT18-129N TMT18-129C TMT18-130N TMT18-130C TMT18-131N
+    TMT18-131C TMT18-132N TMT18-132C TMT18-133N TMT18-133C
+    TMT18-134N TMT18-134C TMT18-135N
+    TMT18-Flags TMT18-FractionOfTotalAb TMT18-TotalAb
     PhosphoRSPeptide nPhospho FullyLocalized
     """.split()
     expected_keys = ignore + _scores + _params
     ptms = """
+    [   +304.207        UNIMOD:2016     304.207146
+    K   +304.207        UNIMOD:2016     304.207146
     [   +229.163        UNIMOD:737      229.162932
     K   +229.163        UNIMOD:737      229.162932
     [   +144.102        UNIMOD:214      144.102063
@@ -96,6 +107,7 @@ class CDAP_NISTPSM_CPTAC2(object):
     }
     def __init__(self,filenames,**kwargs):
         self.filter = kwargs.get('filter')
+        self.cdapversion = kwards.get('cdapversion','1.1')
         self.filenames = filenames
         self.cvmods = {}
         for l in self.ptms.splitlines():
@@ -117,16 +129,17 @@ class CDAP_NISTPSM_CPTAC2(object):
             else:
                 self.params.append('CPTAC-CDAP:'+p)
 
-    @staticmethod
     def metadata():
         md = dict()
         md['SpectrumIDFormat'] = 'Thermo nativeID format'
         md['Threshold'] = 'MS-GF:QValue 0.01'
         md['AnalysisSoftware'] = 'MS-GF+'
         md['OutputFormat'] = "CPTAC-DCC:mzIdentML v1.2.2"
-        md['Software'] =  [_f for _f in map(str.strip,("""
+        software = """
              MS-GF+ Release (v2017.01.27) (27 Jan 2017)
-             CPTAC-CDAP v1.1
+             CPTAC-CDAP v%s
+        """%(self.cdapversion,)
+        md['Software'] =  [_f for _f in map(str.strip,("""
         """.splitlines())) if _f]
         return md
 
