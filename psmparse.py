@@ -107,7 +107,7 @@ class CDAP_NISTPSM_CPTAC2(object):
     }
     def __init__(self,filenames,**kwargs):
         self.filter = kwargs.get('filter')
-        self.cdapversion = kwards.get('cdapversion','1.1')
+        self.cdapversion = kwargs.get('cdapversion','1.1')
         self.filenames = filenames
         self.cvmods = {}
         for l in self.ptms.splitlines():
@@ -129,7 +129,7 @@ class CDAP_NISTPSM_CPTAC2(object):
             else:
                 self.params.append('CPTAC-CDAP:'+p)
 
-    def metadata():
+    def metadata(self):
         md = dict()
         md['SpectrumIDFormat'] = 'Thermo nativeID format'
         md['Threshold'] = 'MS-GF:QValue 0.01'
@@ -368,8 +368,7 @@ class PepArML(object):
             else:
                 self.params.append('PepArML:'+p)
 
-    @staticmethod
-    def metadata():
+    def metadata(self):
         md = dict()
         md['SpectrumIDFormat'] = 'Thermo nativeID format'
         md['AnalysisSoftware'] = 'PepArML'
@@ -554,8 +553,7 @@ TMT11-131C
             else:
                 self.params.append('UMich:'+p)
 
-    @staticmethod
-    def metadata():
+    def metadata(self):
         md = dict()
         md['SpectrumIDFormat'] = 'Thermo nativeID format'
         md['Threshold'] = ""
