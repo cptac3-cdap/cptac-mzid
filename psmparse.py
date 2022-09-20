@@ -139,8 +139,7 @@ class CDAP_NISTPSM_CPTAC2(object):
              MS-GF+ Release (v2017.01.27) (27 Jan 2017)
              CPTAC-CDAP v%s
         """%(self.cdapversion,)
-        md['Software'] =  [_f for _f in map(str.strip,("""
-        """.splitlines())) if _f]
+        md['Software'] =  [_f for _f in map(str.strip,(software.splitlines())) if _f]
         return md
 
     def seqdbs(self,proteins=None):
