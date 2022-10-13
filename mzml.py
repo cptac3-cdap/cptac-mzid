@@ -104,7 +104,7 @@ def get_reporter_ions(labelname):
         for sec in config.sections():
             reporters[sec] = (dict(),dict())
             for k,v in config.items(sec):
-                if k not in ("tolerance","resolution","type","plex","tags","alias"):
+                if k not in ("tolerance","resolution","type","plex","tags","extra","alias"):
                     reporters[sec][0][k] = float(v)
                 elif k in ("tolerance","resolution"):
                     reporters[sec][1][k] = float(v)
@@ -112,11 +112,11 @@ def get_reporter_ions(labelname):
                     reporters[sec][1][k] = int(v)
                 elif k in ("type",):
                     reporters[sec][1][k] = v
-                elif k in ("tags",):
+                elif k in ("tags","extra"):
                     reporters[sec][1][k] = [ vi.strip() for vi in v.split(',') ]
                 elif k == "alias":
                     alias.append((v,sec))
-            assert(len(reporters[sec][0]) == reporters[sec][1]['plex'])
+            assert(len(reporters[sec][0]) == (reporters[sec][1]['plex']+len(reporters[sec][1].get('extra',[]))))
             assert(len(reporters[sec][1]['tags']) == reporters[sec][1]['plex'])
         for a,sec in alias:
             reporters[a] = (dict(reporters[sec][0].items()),dict(reporters[sec][1].items()))
@@ -266,12 +266,19 @@ def write_reporters(infile,labelname,*args,**kw):
         line = []
         scan = specid(sid)['scan']
         line.append(scan)
-        line.append(labelname)
+        if 'extra' not in labelmd:
+            line.append(labelname)
+        else:
+            line.append("%s,+%d"%(labelname,len(labelmd['extra'])))
         for tag in labelmd['tags']:
+            line.append(float("%.5e"%data[tag][0]))
+        for tag in labelmd.get('extra',[]):
             line.append(float("%.5e"%data[tag][0]))
         for tag in labelmd['tags']:
             line.append("%.2f"%data[tag][2] if data[tag][2] != None else '?')
-        line.append(float("%.5e"%data['_frac']) if max(data[t][0] for t in labelmd['tags']) > 0 else "?")
+        for tag in labelmd.get('extra',[]):
+            line.append("%.2f"%data[tag][2] if data[tag][2] != None else '?')
+        line.append(float("%.5e"%data['_frac']) if max(data[t][0] for t in (labelmd['tags']+labelmd.get('extra',[]))) > 0 else "?")
         # line.append(float("%.5e"%data['_total']))
         print("\t".join(map(str,line)),file=out)
 

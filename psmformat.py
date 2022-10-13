@@ -192,8 +192,8 @@ class PSMFormater(object):
 
     def write_metadata(self,md):
         md['FileFormat'] = 'MS:1000584' #mzML file
-        md['Software'].append('textpsm2mzid (md5:99f0a30351fda16a9c5d999581c8ef72)')
-        md['Software'].append('ProteoWizard r22263')
+        md['Software'].append('textpsm2mzid (md5:b8bee0ddf08678274d7f5e55822fae32)')
+        md['Software'].append('ProteoWizard r22286')
 
         print("MDBEGIN")
         for k,v in list(md.items()):
