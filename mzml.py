@@ -171,7 +171,8 @@ def iterreporters(infile,labels,**kw):
                 for mz,it in peaks:
                     for lab in ionmap[int(round(mz*1000))]:
                         labmz = ions[lab]
-                        if mz >= labmz-tolerance and mz <= labmz+tolerance and it > labit[lab]:
+                        bucketdel = lambda d: int(math.floor(abs(d*1000)))
+                        if mz >= labmz-tolerance and mz <= labmz+tolerance and (labdel[lab] == None or bucketdel(mz-labmz) < bucketdel(labdel[lab]) or (bucketdel(mz-labmz) == bucketdel(labdel[lab]) and it > labit[lab])):
                             labit[lab] = it
                             labdel[lab] = (mz-labmz)
                             labqual[lab] = resolution*(mz-labmz)/labmz

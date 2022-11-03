@@ -56,25 +56,23 @@ class CDAP_NISTPSM_CPTAC2(object):
     AmbiguousMatch PrecursorPurity FractionDecomposition HCDEnergy
     iTRAQ114 iTRAQ115 iTRAQ116 iTRAQ117
     iTRAQFlags iTRAQTotalAb iTRAQFractionOfTotalAb
+    TMT6-126 TMT6-127 TMT6-128 TMT6-129 TMT6-130 TMT6-131
     TMT10-126 TMT10-127N TMT10-127C TMT10-128N TMT10-128C
     TMT10-129N TMT10-129C TMT10-130N TMT10-130C TMT10-131
-    TMTXX-131C TMTXX-132N
-    TMT10-Flags TMT10-FractionOfTotalAb TMT10-TotalAb
-    TMT6-126 TMT6-127 TMT6-128 TMT6-129 TMT6-130 TMT6-131
-    TMT6-Flags TMT6-FractionOfTotalAb TMT6-TotalAb
     TMT11-126C TMT11-127N TMT11-127C TMT11-128N TMT11-128C
     TMT11-129N TMT11-129C TMT11-130N TMT11-130C TMT11-131N TMT11-131C
-    TMTXX-132N TMTXX-132C
-    TMT11-Flags TMT11-FractionOfTotalAb TMT11-TotalAb
     TMT16-126C TMT16-127N TMT16-127C TMT16-128N TMT16-128C
     TMT16-129N TMT16-129C TMT16-130N TMT16-130C TMT16-131N
     TMT16-131C TMT16-132N TMT16-132C TMT16-133N TMT16-133C TMT16-134N
-    TMTXX-134C TMTXX-135N
-    TMT16-Flags TMT16-FractionOfTotalAb TMT16-TotalAb
     TMT18-126C TMT18-127N TMT18-127C TMT18-128N TMT18-128C
     TMT18-129N TMT18-129C TMT18-130N TMT18-130C TMT18-131N
     TMT18-131C TMT18-132N TMT18-132C TMT18-133N TMT18-133C
     TMT18-134N TMT18-134C TMT18-135N
+    TMTXX-131C TMTXX-132N TMTXX-132C TMTXX-134C TMTXX-135N
+    TMT6-Flags TMT6-FractionOfTotalAb TMT6-TotalAb
+    TMT10-Flags TMT10-FractionOfTotalAb TMT10-TotalAb
+    TMT11-Flags TMT11-FractionOfTotalAb TMT11-TotalAb
+    TMT16-Flags TMT16-FractionOfTotalAb TMT16-TotalAb
     TMT18-Flags TMT18-FractionOfTotalAb TMT18-TotalAb
     PhosphoRSPeptide nPhospho FullyLocalized
     """.split()
@@ -128,9 +126,11 @@ class CDAP_NISTPSM_CPTAC2(object):
         self.params = []
         for p in self._params:
             if p in self.keymap:
-                self.params.append(':'.join(self.keymap[p]))
+                value = ':'.join(self.keymap[p])
             else:
-                self.params.append('CPTAC-CDAP:'+p)
+                value = 'CPTAC-CDAP:'+p
+            if value not in self.params:
+                self.params.append(value)
 
     def metadata(self):
         md = dict()
