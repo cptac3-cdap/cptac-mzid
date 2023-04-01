@@ -180,7 +180,10 @@ def iterreporters(infile,labels,**kw):
                 for lab in ions:
                     data[lab] = (labit[lab],labdel[lab],labqual[lab])
                 data['_total'] = sum(labit.values())
-                data['_frac'] = data['_total']/totalab
+                if totalab > 0:
+                    data['_frac'] = data['_total']/totalab
+                else:
+                    data['_frac'] = 0.0
                 yield specid,data
 
     h.close()
