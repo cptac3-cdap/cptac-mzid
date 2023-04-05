@@ -13,6 +13,7 @@ specparams = [
     ('ms level', 'MS:1000511', int),
     ('MS1 spectrum', 'MS:1000579', present),
     ('MSn spectrum', 'MS:1000580', present),
+    ('master scan number',None,int)
     ]
 
 selionparams = [
@@ -39,16 +40,17 @@ bdaparams = [
 
 def getcvparams(ele,paramlist):
     values = {}
-    for chele in ele.findall(CVP):
+    for chele in list(ele.findall(CVP)) + list(ele.findall(USP)):
         for p in paramlist:
-            if chele.attrib['name'] == p[0] or \
-               chele.attrib['accession'] == p[1]:
+            if (p[0] != None and chele.attrib['name'] == p[0]) or \
+               (p[1] != None and chele.attrib.get('accession') == p[1]):
                 values[chele.attrib['name']] = p[2](chele.attrib.get('value'))
     return values
 
 ns = '{http://psi.hupo.org/ms/mzml}'
 SPEC = ns+'spectrum'
 CVP  = ns+'cvParam'
+USP  = ns+'userParam'
 PRE  = ns+'precursorList/' + ns + 'precursor'
 SEL  = ns+'selectedIonList/' + ns + 'selectedIon'
 ACT  = ns+'activation'
@@ -126,7 +128,10 @@ def iterreporters(infile,labels,**kw):
     ions,ionmd = get_reporter_ions(labels)
     tolerance = kw.get('tolerance',ionmd['tolerance'])
     resolution = kw.get('resolution',ionmd['resolution'])
-
+    if labels.startswith('MS3-'):
+        mslevel = 3
+    else:
+        mslevel = 2
     lowmz = min(ions.values())-2*tolerance
     highmz = max(ions.values())+2*tolerance
 
@@ -145,8 +150,17 @@ def iterreporters(infile,labels,**kw):
         if ele.tag == SPEC:
             specid = ele.attrib['id']
             cvparams = getcvparams(ele,specparams)
-            msn = cvparams.get('MSn spectrum',False)
+            msn = cvparams.get('MSn spectrum',False) and cvparams.get('ms level',2) == mslevel
             if msn:
+                if mslevel == 3:
+                    specidelts = {}
+                    keys = []
+                    for elt in specid.split():
+                        k,v = elt.split('=')
+                        keys.append(k)
+                        specidelts[k] = v
+                    specidelts['scan'] = str(cvparams['master scan number'])
+                    specid = " ".join("%s=%s"%(k,specidelts[k]) for k in keys)
                 mz = []; it = []
                 for bda in ele.findall(BDA):
                     cvparams1 = getcvparams(bda,bdaparams)
@@ -196,9 +210,11 @@ def iterms2(infile):
     for event, ele in ET.iterparse(h):
         if ele.tag == SPEC:
             specid = ele.attrib['id']
+            # print(specid)
             cvparams = getcvparams(ele,specparams)
             msn = cvparams.get('MSn spectrum',False)
-            if msn:
+            msl = int(cvparams.get('ms level',0))
+            if msn and msl == 2:
                 mz = []; it = []
                 for bda in ele.findall(BDA):
                     cvparams1 = getcvparams(bda,bdaparams)
@@ -270,6 +286,8 @@ def write_reporters(infile,labelname,*args,**kw):
         line = []
         scan = specid(sid)['scan']
         line.append(scan)
+        if labelname.startswith('MS3-'):
+            labelname = labelname.split('-',1)[1]
         if 'extra' not in labelmd:
             line.append(labelname)
         else:
