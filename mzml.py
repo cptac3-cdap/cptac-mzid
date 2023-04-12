@@ -240,7 +240,10 @@ def iterms2(infile):
                 selected = prec.find(SEL)
                 cvparams = getcvparams(selected,selionparams)
                 precursormz = cvparams['selected ion m/z']
-                precursorz = int(cvparams.get('charge state'))
+                try:
+                    precursorz = int(cvparams.get('charge state'))
+                except (TypeError,ValueError):
+                    precursorz = ""
                 precursorit = cvparams.get('peak intensity')
                 activation = prec.find(ACT)
                 cvparams = getcvparams(activation,activationparams)
