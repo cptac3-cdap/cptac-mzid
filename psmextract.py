@@ -39,7 +39,6 @@ if len(set(psms.seqdbs())|set(opts.seqdb)) > 0:
 seqdbs = SequenceDatabase.seqdbs(opts.seqdir,opts.seqdb)
 if "Decoy" in seqdbs:
     seqdbs["Decoy"].setDecoyPrefix(psms.decoyPrefix())
-# print seqdbs
 
 scores = psms.scores
 params = psms.params
@@ -69,14 +68,13 @@ prot2pept = defaultdict(set)
 
 sdbseenids = set()
 for psm in psmcache.psms():
-
     peptid = peptindex.add(psm['Peptide'])
 
     origProteins = psm['Protein']
     psm['_Protein'] = list(origProteins)
     newProteins = []
 
-    # print origProteins
+    # print(origProteins)
 
     sdbneeded = set()
     for sdb in list(seqdbs.values()):
@@ -88,8 +86,8 @@ for psm in psmcache.psms():
             origProteins = psms.removeProtein(sdb,pr,origProteins)
             newProteins.append(pr)
 
-    # print origProteins
-    # print newProteins
+    # print(origProteins)
+    # print(newProteins)
 
     if len(origProteins) > 0:
         sdbneeded.update(psms.seqdbs(origProteins))
@@ -138,7 +136,8 @@ def prcmp(a,b):
     if seqdbs[a[1]]._acc:
         dla = seqdbs[a[1]].protein_defline(a[2])
         dlb = seqdbs[b[1]].protein_defline(b[2])
-        return seqdbs[a[1]].prefer((a[0],dla),(b[0],dlb))
+        if dla and dlb:
+            return seqdbs[a[1]].prefer((a[0],dla),(b[0],dlb))
     return cmp(a[0],b[0])
 
 from functools import cmp_to_key

@@ -2,7 +2,7 @@
 import os, sys, os.path, re
 
 from peptidescan.OutOfCoreTable import OutOfCoreSortedTable
-from peptidescan.PeptideRemapper import PeptideRemapper, UniProtIsoformAcc, RefSeqAcc, UCSCKGAcc, UniProtIsoformRefSeq, RefSeqUniProtIsoform
+from peptidescan.PeptideRemapper import PeptideRemapper, UniProtIsoformAcc, RefSeqAcc, UCSCKGAcc, UniProtIsoformRefSeq, RefSeqUniProtIsoform, GencodeENSP
 from operator import itemgetter
 
 class SequenceDatabase(object):
@@ -61,6 +61,7 @@ class SequenceDatabase(object):
             return
         if not self._filename:
             return
+        # print(self._filename, self._acc)
         self._pm = PeptideRemapper(peptides, self._filename, self._acc, preprocess=True)
 
     def proteins(self,peptide):
@@ -158,11 +159,32 @@ class UniProt(SequenceDatabase):
     def dbsource(self):
         return "DB source UniProt"
 
+class Gencode(SequenceDatabase):
+    _name = 'Gencode'
+    _acc = GencodeENSP()
+    def __init__(self,*args,**kwargs):
+        super(Gencode,self).__init__(*args,**kwargs)
+
+    def url(self):
+        if not self.orgmap():
+            return None
+        assert self.organism() in ("Human","Mouse")
+        metadata = {}
+        metadata['release'] = self.version().lower().strip('v')
+        metadata['organism'] = self.organism().lower()
+        return "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_%(organism)s/release_%(release)s/gencode.v%(release)s.pc_translations.fa.gz"%metadata
+
+    def dbsource(self):
+        return "DB source Gencode"
+
 class Decoy(SequenceDatabase):
     _name = 'Decoy'
 
 class Unknown(SequenceDatabase):
     _name = 'Unknown'
+
+class Contaminant(SequenceDatabase):
+    _name = 'Contaminant'
 
 class PSMCache(object):
 

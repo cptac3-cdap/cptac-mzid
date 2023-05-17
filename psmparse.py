@@ -149,8 +149,8 @@ class CDAP_NISTPSM_CPTAC2(object):
         if proteins:
             return list(map(itemgetter(0),proteins))
         if self.keepdecoys:
-            return ["RefSeq","UniProt","Decoy"]
-        return ["RefSeq","UniProt"]
+            return ["Gencode","RefSeq","UniProt","Contaminant","Decoy"]
+        return ["Gencode","RefSeq","UniProt","Contaminant"]
 
     def removeProtein(self,sdb,pr,proteins):
 
@@ -273,6 +273,14 @@ class CDAP_NISTPSM_CPTAC2(object):
                     m = re.search(r'^(sp|tr)\|([^|]*)\|([^|]*)$',pracc)
                     if m:
                         source = "UniProt"; pracc = m.group(2)
+
+                    m = re.search(r'^(ENS(MUS)?P[^|]*)\|(.*)$',pracc)
+                    if m:
+                        source = "Gencode"; pracc = m.group(1)
+
+                    m = re.search(r'^Cont\|([^ ]*)( .*)?$',pracc)
+                    if m:
+                        source = "Contaminant"; pracc = m.group(1).replace(':','|')
 
                     if not source:
                         raise RuntimeError
@@ -569,8 +577,8 @@ TMT11-131C
         if proteins:
             return list(map(itemgetter(0),proteins))
         if self.keepdecoys:
-            return ["RefSeq","UniProt","Decoy"]
-        return ["RefSeq","UniProt"]
+            return ["Gencode","RefSeq","UniProt","Contaminant","Decoy"]
+        return ["Gencode","RefSeq","UniProt","Contaminant"]
 
     def decoyPrefix(self):
         return "XXX_"
@@ -686,6 +694,10 @@ TMT11-131C
 
                     source = None;
 
+                    m = re.search(r'^(gi\|\d+\|)?ref\|([^|]*)\|$',pracc)
+                    if m:
+                        source = "RefSeq"; pracc = m.group(2)
+
                     m = re.search(r'^([NXYA]P_[^|]*)$',pracc)
                     if m:
                         source = "RefSeq"; pracc = m.group(1)
@@ -693,6 +705,10 @@ TMT11-131C
                     m = re.search(r'^(sp|tr)\|([^|]*)\|([^|]*)$',pracc)
                     if m:
                         source = "UniProt"; pracc = m.group(2)
+
+                    m = re.search(r'^(ENS(MUS)?P[^|]*)\|(.*)$',pracc)
+                    if m:
+                        source = "Gencode"; pracc = m.group(1)
 
                     if not source:
                         raise RuntimeError
