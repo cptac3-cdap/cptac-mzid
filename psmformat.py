@@ -155,7 +155,7 @@ class UniProt(SequenceDatabase):
     def url(self):
         if not self.orgmap():
             return None
-        return "https://rest.uniprot.org/uniprotkb/stream?query=keyword%3AKW-1185+AND+organism_id%3A%(taxid)s&format=fasta&force=true&compressed=true&includeIsoform=true"%self.orgmap()
+        return "https://rest.uniprot.org/uniprotkb/stream?query=keyword%%3AKW-1185+AND+organism_id%%3A%(taxid)s&format=fasta&force=true&compressed=true&includeIsoform=true"%self.orgmap()
 
     def dbsource(self):
         return "DB source UniProt"
