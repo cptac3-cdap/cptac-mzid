@@ -105,7 +105,7 @@ class SequenceDatabase(object):
             if sec in seen:
                 continue
             seen.add(sec)
-            if sec in seqdbconfig.has_section(sec):
+            if seqdbconfig.has_section(sec):
                 kwargs = dict(seqdbconfig.items(sec))
                 kwargs['priority'] = i+1
                 kwargs['id'] = sec
