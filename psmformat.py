@@ -105,11 +105,12 @@ class SequenceDatabase(object):
             if sec in seen:
                 continue
             seen.add(sec)
-            kwargs = dict(seqdbconfig.items(sec))
-            kwargs['priority'] = i+1
-            kwargs['id'] = sec
-            sdb = SequenceDatabase.new(seqdir,**kwargs)
-            sdbs[sdb.id()] = sdb
+            if sec in seqdbconfig.has_section(sec):
+                kwargs = dict(seqdbconfig.items(sec))
+                kwargs['priority'] = i+1
+                kwargs['id'] = sec
+                sdb = SequenceDatabase.new(seqdir,**kwargs)
+                sdbs[sdb.id()] = sdb
         return sdbs
 
     @staticmethod

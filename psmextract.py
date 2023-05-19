@@ -22,7 +22,7 @@ parser.add_option("--seqdir",type="string",default="sequence",
                   dest="seqdir",help="Directory containing the sequence files. Default: \"sequence\".")
 parser.add_option("--labels",type="string",default=None,
                   dest="labels",help="Extract reporter ions. Default: No reporter ions.")
-parser.add_option("--cdap",type="choice",choices=['1.1','2.0'],default='1.1',
+parser.add_option("--cdap",type="choice",choices=['1.1','2.0','2.1'],default='1.1',
                   dest="cdapversion",help="CPTAC-CDAP version. Default: v1.1.")
 
 opts,args = parser.parse_args()
