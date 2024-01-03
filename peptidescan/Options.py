@@ -1,6 +1,9 @@
 
 # from pkg_resources import resource_stream, resource_exists, resource_filename
-from configparser import SafeConfigParser
+try:
+    from configparser import SafeConfigParser
+except ImportError:
+    from ConfigParser import SafeConfigParser
 import platform, os, os.path, sys
 
 def escape_spaces(s):

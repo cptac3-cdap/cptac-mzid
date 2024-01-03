@@ -1,4 +1,6 @@
 
+from __future__ import print_function
+
 import sys,re
 from .fastalib import fasta
 from .ProteinHitDb import ProteinDatabase

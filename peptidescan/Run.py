@@ -1,4 +1,6 @@
 
+from __future__ import print_function
+
 from .Options import Config, Options, escape_spaces
 import subprocess, sys, os, os.path, stat, select, threading, queue
 from .Record import Result

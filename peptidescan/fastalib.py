@@ -1,4 +1,6 @@
 
+from __future__ import print_function
+
 import sys,os,re
 
 class fastalib_filter:
