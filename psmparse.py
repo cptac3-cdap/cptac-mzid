@@ -96,6 +96,8 @@ class CDAP_NISTPSM_CPTAC2(object):
     Y   +79.966         Phospho         79.966331
     [   +42.011         Acetyl          42.010565
     K   +42.011         Acetyl          42.010565
+    [   +42.010         Acetyl          42.010565
+    K   +42.010         Acetyl          42.010565
     K   +114.043        GG              114.042927
     """
     keymap = {
@@ -337,6 +339,8 @@ class PepArML(object):
     Y   +79.966         Phospho         79.966331
     [   +42.011         Acetyl          42.010565
     K   +42.011         Acetyl          42.010565
+    [   +42.010         Acetyl          42.010565
+    K   +42.010         Acetyl          42.010565
     K   +114.043        GG              114.042927
     """
 
@@ -537,6 +541,8 @@ TMT11-131C
     Y   +79.966         Phospho         79.966331
     [   +42.011         Acetyl          42.010565
     K   +42.011         Acetyl          42.010565
+    [   +42.010         Acetyl          42.010565
+    K   +42.010         Acetyl          42.010565
     K   +114.043        GG              114.042927
     """
 
