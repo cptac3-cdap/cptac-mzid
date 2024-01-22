@@ -86,6 +86,8 @@ class CDAP_NISTPSM_CPTAC2(object):
     K   +144.102        UNIMOD:214      144.102063
     M   +15.995         Oxidation       15.994915
     C   +57.021         Carbamidomethyl 57.021464
+    C   +57.022         Carbamidomethyl 57.021464
+    C   +45.988         Methylthio	45.987721
     Q   +0.984          Deamidated      0.984016
     N   +0.984          Deamidated      0.984016
     [Q  -17.027         Gln->pyro-Glu   -17.026549
@@ -328,6 +330,8 @@ class PepArML(object):
     K   +144.102        UNIMOD:214      144.102063
     M   +15.995         Oxidation       15.994915
     C   +57.021         Carbamidomethyl 57.021464
+    C   +57.022         Carbamidomethyl 57.021464
+    C   +45.988         Methylthio	45.987721
     Q   +0.984          Deamidated      0.984016
     N   +0.984          Deamidated      0.984016
     [Q  -17.027         Gln->pyro-Glu   -17.026549
@@ -531,6 +535,7 @@ TMT11-131C
     M   +15.995         Oxidation       15.994915
     C   +57.021         Carbamidomethyl 57.021464
     C   +57.022         Carbamidomethyl 57.021464
+    C   +45.988         Methylthio	45.987721
     Q   +0.984          Deamidated      0.984016
     N   +0.984          Deamidated      0.984016
     [Q  -17.027         Gln->pyro-Glu   -17.026549
