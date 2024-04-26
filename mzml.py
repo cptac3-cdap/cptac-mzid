@@ -63,6 +63,10 @@ def iterprecursor(infile):
         h = gzip.open(infile)
     else:
         h = open(infile,'rb')
+        if h.read(2) == b'\x1f\x8b':
+            h = gzip.open(infile)
+        else:
+            h.seek(0)
     for event, ele in ET.iterparse(h):
         if ele.tag == SPEC:
             specid = ele.attrib['id']
@@ -146,6 +150,10 @@ def iterreporters(infile,labels,**kw):
         h = gzip.open(infile)
     else:
         h = open(infile,'rb')
+        if h.read(2) == b'\x1f\x8b':
+            h = gzip.open(infile)
+        else:
+            h.seek(0)
     for event, ele in ET.iterparse(h):
         if ele.tag == SPEC:
             specid = ele.attrib['id']
@@ -207,6 +215,10 @@ def iterms2(infile):
         h = gzip.open(infile)
     else:
         h = open(infile,'rb')
+        if h.read(2) == b'\x1f\x8b':
+            h = gzip.open(infile)
+        else:
+            h.seek(0)
     for event, ele in ET.iterparse(h):
         if ele.tag == SPEC:
             specid = ele.attrib['id']
