@@ -282,6 +282,106 @@ def write_mgf(infile,out=None):
             print("%f %f"%p,file=out)
         print("END IONS\n",file=out)
 
+def xmlindent(current, parent=None, index=-1, depth=0):
+    for i, node in enumerate(current):
+        xmlindent(node, current, i, depth + 1)
+    if parent is not None:
+        if index == 0:
+            parent.text = '\n' + ('  ' * depth)
+        else:
+            parent[index - 1].tail = '\n' + ('  ' * depth)
+        if index == len(parent) - 1:
+            current.tail = '\n' + ('  ' * (depth - 1))
+
+def write_phosphors(mzmlfile,psmfile,modfile,out=None,tolerance=0.05,activation='HCD'):
+    if not out:
+        out = sys.stdout
+
+    moddata = dict()
+    headers = "ch,aas,matchdelta,name,delta,loss".split(',')
+    # 1       S       79.966  Phospho 79.966331       97.976896
+    # 1       T       79.966  Phospho 79.966331       97.976896
+    for line in open(modfile):
+        row = dict(zip(headers,line.split()))
+        row['delta'] = float(row['delta'])
+        row['loss'] = float(row['loss'])
+        matchdelta = row['matchdelta']
+        if float(matchdelta)>=0:
+            matchdelta = "+"+matchdelta             
+        else:
+            matchdelta = "-"+matchdelta             
+        row['matchdelta'] = matchdelta 
+        if matchdelta in moddata:
+            moddata[matchdelta]['aas'] += row['aas']
+        else:
+            moddata[matchdelta] = row
+
+    psmdata = defaultdict(list)
+    for row in csv.DictReader(open(psmfile),dialect='excel-tab'):
+        if 'Peptide' in row:
+            peptide = row['Peptide']
+        else:
+            peptide = row['PeptideSequence']
+        splpep = re.split(r'([A-Z])',peptide)
+        pepseq = "".join(splpep[1::2])
+        mods = []
+        for i,mi in enumerate(splpep[0::2]):
+            if mi in moddata:
+                if i == 0 and '[' in moddata[mi]['aas']:
+                    mods.append(moddata[mi]['ch'])
+                elif pepseq[i-1] in moddata[mi]['aas']:
+                    mods.append(moddata[mi]['ch'])
+                else:
+                    raise LookupError(pepseq[i-1],mi)
+            elif mi == "":
+                mods.append('0')
+            else:
+                raise LookupError(mi)
+        mods = mods[0]+"."+"".join(mods[1:])+".0"
+        scannum = int(row['ScanNum'])
+        psmdata[scannum].append(dict(scannum=scannum,pepseq=pepseq,mods=mods,peptide=peptide))
+
+    root = ET.Element("phosphoRSInput")
+    phosphorsxml = ET.ElementTree(root)
+    ET.SubElement(root,"MassTolerance",Value=str(tolerance))
+    ET.SubElement(root,"Phosphorylation",Symbol='1')
+    spectra = ET.SubElement(root,"Spectra")
+    
+    for s in iterms2(mzmlfile):
+        peaks = s['peaks']
+        if len(peaks) == 0:
+            continue
+        precursor = s['precursor']
+        metadata = s['metadata']
+        metadata['scan'] = specid(metadata['id'])['scan']
+        scan = int(metadata['scan'])
+        if scan not in psmdata:
+            continue
+        spectrum = ET.SubElement(spectra,"Spectrum",ID=metadata['scan'],
+                                                    PrecursorCharge=str(precursor['z']),
+                                                    ActivationTypes=activation)
+        peakselt = ET.SubElement(spectrum,"Peaks")
+        peakstext = []
+        for p in sorted(peaks):
+            peakstext.append(":".join(map(str,p)))
+        peakselt.text = ",".join(peakstext)
+        peptides = ET.SubElement(spectrum,"IdentifiedPhosphorPeptides")
+        for psm in psmdata[scan]:
+            ET.SubElement(peptides,"Peptide",ID="_".join([metadata['scan'],psm['peptide']]),
+                                             Sequence=psm['pepseq'],
+                                             ModificationInfo=psm['mods'])
+
+    modinfos = ET.SubElement(root,"ModificationInfos")
+    for mod in moddata.values():
+        if mod.get('loss',0.0) > 0:
+            val = "%(ch)s:%(name)s:%(name)s:%(delta)s:PhosphoLoss:%(loss)s:%(aas)s"%mod
+        else:
+            val = "%(ch)s:%(name)s:%(name)s:%(delta)s:null:0:%(aas)s"%mod
+        ET.SubElement(modinfos,"ModificationInfo",Symbol=mod['ch'],Value=val)
+
+    xmlindent(root)
+    phosphorsxml.write(out,encoding="unicode")
+
 def write_reporters(infile,labelname,*args,**kw):
     out = sys.stdout
     labels,labelmd = get_reporter_ions(labelname)
@@ -353,3 +453,6 @@ if __name__ == '__main__':
             
     elif cmd == "add_spec_metadata":
         add_spec_metadata(*args[:2])
+
+    elif cmd == "write_phosphors":
+        write_phosphors(*args[:3],tolerance=args[3],activation=args[4],)
